@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>纹理草稿</title>
+<style>
+html,body{margin:0;background:#e8e8e8;font-family:"Microsoft YaHei",sans-serif;color:#111}
+.g{display:grid;grid-template-columns:repeat(3,560px);gap:30px;padding:30px 40px;width:max-content}
+.c{background:#f6f6f6;border:3px solid #111;border-radius:10px;overflow:hidden}
+.c svg{display:block;width:560px;height:340px;background:#fff}
+.c h3{margin:0;padding:12px 18px 2px;font:700 26px/1.2 "Microsoft YaHei"}
+.c p{margin:0;padding:0 18px 14px;font:500 17px/1.6 "Microsoft YaHei";color:#555}
+</style></head><body>
+<div class="g" id="g"></div>
+<script>
+const INK='#0b0b0b', TAN='#cfcfcf', TAN2='#a3a3a3', Y='#777', G1='#d9d9d9', G2='#f3f3f3';   // 只用黑白灰
+let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const cards=[];
+const add=(title,desc,body)=>cards.push(`<div class="c"><svg viewBox="0 0 560 340">${body}</svg><h3>${title}</h3><p>${desc}</p></div>`);
+
+/* 1 栓钉散点：两头圆球的小棒，各种角度散落 */
+{ let s=''; const peg=(x,y,a,sc,fill)=>`<g transform="translate(${x} ${y}) rotate(${a}) scale(${sc})"><rect x="-26" y="-4.5" width="52" height="9" rx="4.5" fill="#fff" stroke="${INK}" stroke-width="3"/><circle cx="-26" cy="0" r="10" fill="${fill}" stroke="${INK}" stroke-width="3"/><circle cx="26" cy="0" r="10" fill="${fill}" stroke="${INK}" stroke-width="3"/></g>`;
+  for(let i=0;i<22;i++){ s+=peg(30+rnd()*500,24+rnd()*290,rnd()*180,.55+rnd()*.5,rnd()<.28?Y:TAN); }
+  add('① 栓钉散点','两头带圆球的短棒，大小角度不一地散着。像螺栓、像哑铃、像天体的两颗卫星——不是任何具体物件。可以代替顶部的网点，或撒在白板边缘。',s); }
+
+/* 2 云团边：重叠圆弧，粗描边 + 白填充 */
+{ let s=`<rect width="560" height="340" fill="${G2}"/>`; const cl=(x,y,sc)=>`<g transform="translate(${x} ${y}) scale(${sc})"><path d="M-70 24a30 30 0 0 1 14-54a40 40 0 0 1 72-12a34 34 0 0 1 56 20a26 26 0 0 1-10 46z" fill="#fff" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/></g>`;
+  s+=cl(130,110,1)+cl(380,70,.8)+cl(290,230,1.15)+cl(70,270,.6)+cl(500,250,.7);
+  add('② 云团','重叠的圆弧 + 粗黑描边，里面纯白。像云、像气泡、像一团蒸汽。可以做白板下沿的波浪边，或做标签、对话气泡的外形。',s); }
+
+/* 3 阶梯线路：直角折线 + 节点，像机械的嵌线 */
+{ let s=`<rect width="560" height="340" fill="${G1}"/>`; s+=`<defs><pattern id="p3" width="140" height="110" patternUnits="userSpaceOnUse"><path d="M0 20H40V50H80V20H140M0 80H30V60M80 90H110V70H140M60 0V20M60 110V90" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"/><path d="M0 20H40V50H80V20H140M0 80H30V60M80 90H110V70H140M60 0V20M60 110V90" fill="none" stroke="${INK}" stroke-width="1.5" transform="translate(2 2)" opacity=".5"/><circle cx="40" cy="50" r="6" fill="${TAN}" stroke="${INK}" stroke-width="2.5"/><circle cx="80" cy="20" r="6" fill="#fff" stroke="${INK}" stroke-width="2.5"/><circle cx="110" cy="70" r="5" fill="${TAN}" stroke="${INK}" stroke-width="2.5"/></pattern></defs><rect width="560" height="340" fill="url(#p3)"/>`;
+  add('③ 阶梯线路','直角折线、小节点、白色嵌线。像电路板、像机械的内部、也像复古的几何装饰带。做成低对比的底纹，适合顶栏、标签条、书页边缘。',s); }
+
+/* 4 刻度环：圆环 + 细齿 */
+{ let s=`<rect width="560" height="340" fill="${G2}"/>`; const ring=(cx,cy,r,n,col)=>{ let t=''; for(let i=0;i<n;i++){const a=i/n*Math.PI*2, x1=cx+Math.cos(a)*r, y1=cy+Math.sin(a)*r, x2=cx+Math.cos(a)*(r+(i%5?10:20)), y2=cy+Math.sin(a)*(r+(i%5?10:20)); t+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${i%5?3:5}"/>`;} return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="6"/>`+t; };
+  s+=ring(210,170,90,60,INK)+`<circle cx="210" cy="170" r="62" fill="none" stroke="${TAN2}" stroke-width="14"/>`+`<circle cx="210" cy="170" r="12" fill="${Y}" stroke="${INK}" stroke-width="4"/>`+ring(420,110,46,36,'#9a9a9a')+ring(440,250,30,24,'#bdbdbd');
+  add('④ 刻度环','圆环外面一圈长短不一的细齿。像单片眼镜的齿圈、像轮子、像行星的轨道刻度。可以做雕像背后很淡的水印，也可以套在页码外面。',s); }
+
+/* 5 穹顶与底座：半圆罩 + 椭圆托盘，罩里长着一丛植物 */
+{ let s=`<rect width="560" height="340" fill="${G2}"/>`;
+  const blade=(a,h,w)=>`<path d="M0 0C${-w} ${-h*.35} ${-w*.5} ${-h*.8} 0 ${-h}C${w*.5} ${-h*.8} ${w} ${-h*.35} 0 0Z" transform="rotate(${a})" />`;
+  const plant=(fill)=>`<g fill="${fill}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round">${blade(-52,34,9)}${blade(52,34,9)}${blade(-26,44,10)}${blade(26,44,10)}${blade(0,52,11)}</g>`;
+  const dome=(x,y,sc,fill)=>`<g transform="translate(${x} ${y}) scale(${sc})"><ellipse cx="0" cy="40" rx="78" ry="16" fill="${TAN}" stroke="${INK}" stroke-width="5"/><ellipse cx="0" cy="30" rx="78" ry="16" fill="#fff" stroke="${INK}" stroke-width="5"/><path d="M-52 30a52 52 0 0 1 104 0z" fill="#fff" stroke="${INK}" stroke-width="5"/><g transform="translate(0 28)">${plant(fill)}</g><path d="M-30 -8a38 38 0 0 1 24-20" fill="none" stroke="#c9c9c9" stroke-width="5" stroke-linecap="round"/></g>`;
+  s+=dome(150,170,1,Y)+dome(330,120,.7,'#fff')+dome(420,240,.9,Y)+dome(70,60,.45,'#fff');
+  add('⑤ 穹顶与托盘','半圆玻璃罩扣在椭圆托盘上，罩里长着一丛植物（几片尖叶扇开）。像标本罩、像太空舱、像小飞碟。可以做卡堆的占位图形、未解锁的卡面，或一行重复的小装饰。',s); }
+
+/* 6 纸颗粒 + 双线描边 */
+{ let s=`<rect width="560" height="340" fill="${G1}"/>`; for(let i=0;i<900;i++){ const x=rnd()*560,y=rnd()*340,r=.6+rnd()*1.4; s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${rnd()<.5?'#fff':'#9d9d9d'}" opacity="${.35+rnd()*.5}"/>`; }
+  s+=`<g fill="none" stroke-linejoin="round"><path d="M60 80L430 64L470 150L80 168Z" stroke="${INK}" stroke-width="9"/><path d="M60 80L430 64L470 150L80 168Z" stroke="#fff" stroke-width="3" transform="translate(5 5)"/></g><path d="M110 250H470" stroke="${INK}" stroke-width="8" stroke-linecap="round"/><path d="M110 258H420" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M330 300H500" stroke="${Y}" stroke-width="10" stroke-linecap="round"/>`;
+  add('⑥ 纸颗粒与双线','整体铺一层细颗粒，描边是「黑粗线里面再压一条白细线」，像手绘马克笔的质感。不画任何形状，只改变所有面的手感，可叠在所有灰色面上。',s); }
+
+document.getElementById('g').innerHTML=cards.join('');
+</script></body></html>

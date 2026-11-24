@@ -1,0 +1,12 @@
+# 备份文件
+*.bak
+*.bak-*
+
+# 从飞书表格拉数据的脚本（含文档 token，不公开）
+make_chars_data.py
+make_wardrobe_data.py
+
+__pycache__/
+Thumbs.db
+desktop.ini
+.DS_Store

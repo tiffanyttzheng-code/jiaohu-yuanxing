@@ -1,0 +1,110 @@
+/* 设置页（settings.js），根元素类名 .sgp（.sg 已被联系簿的剪影占用）。画布 1920×1080；风格同任务页：灰白渐变底、顶栏、左侧分类（方块）、右侧白卡片。黑白灰 + 黄，缓动统一 GLIDE。 */
+.sgp.page.sub{display:none;background:linear-gradient(217.77deg,#888 19.39%,#fff 82.21%);font-family:"Microsoft YaHei UI","Microsoft YaHei",Inter,sans-serif;color:#000;user-select:none}
+.sgp.page.sub.on{display:block}
+.sgp *{box-sizing:border-box}
+.sgp>div{position:absolute}
+.sgp img{display:block;max-width:none;pointer-events:none}
+
+/* 顶栏：返回 | 设置 | ✕（同任务页） */
+.sg-tbar{left:45px;top:29px;width:1779px;height:72px;border-radius:15px;background:rgba(255,255,255,.56)}
+.sg-back{left:76px;top:41px;width:29px;height:48px;cursor:none;z-index:9}
+.sg-back img{position:absolute;left:-9.5px;top:9.5px;width:48px;height:29px;transform:rotate(90deg);transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+.sg-back:hover img{transform:rotate(90deg) translateY(6px)}
+.sg-tab1{left:1645px;top:38px;width:161px;height:55px;border-radius:10px;background:#fff;text-align:center;font:700 40px/55px Inter,"Microsoft YaHei",sans-serif;transform:rotate(-.38deg)}
+.sg-x{left:1845px;top:41px;width:42px;height:45px;cursor:none;z-index:9}
+.sg-x img{width:100%;height:100%;transition:transform .3s cubic-bezier(.7,0,.2,1)}
+.sg-x:hover img{transform:rotate(90deg)}
+
+/* 左：标题 + 分类（同任务页章节标题：13px 方块 + 20px 粗字，行距 55；选中方块变黄放大） */
+.sg-ttl{left:48px;top:166px;font:400 64px/1.2 var(--font);white-space:nowrap;pointer-events:none}
+.sg-cats{left:48px;top:248px;width:300px}
+.sg-cat{position:relative;height:55px;padding-left:30px;cursor:none}
+.sg-cat .sq{position:absolute;left:3px;top:9.5px;width:13px;height:13px;background:#424242;transition:transform .45s cubic-bezier(.7,0,.2,1),background .3s}
+.sg-cat b{display:inline-block;font:700 20px/32px Inter,"Microsoft YaHei UI","Microsoft YaHei",sans-serif;color:#424242;transition:transform .4s cubic-bezier(.3,1.6,.5,1),color .3s}
+.sg-cat:hover .sq{transform:rotate(45deg)}
+.sg-cat:hover b{transform:translateX(6px)}
+.sg-cat.on .sq{background:#ffc822;transform:scale(1.25)}
+.sg-cat.on:hover .sq{transform:scale(1.25) rotate(45deg)}
+.sg-cat.on b{color:#000;transform:translateX(4px) scale(1.12);transform-origin:left center}
+
+/* 右：卡片（380,167 1488×847，白 66%，圆角 31，投影 0 4 4 25%） */
+.sg-card{left:380px;top:167px;width:1488px;height:847px;border-radius:31px;background:rgba(255,255,255,.66);box-shadow:0 4px 4px rgba(0,0,0,.25)}
+.sg-card>*{position:absolute}
+.sg-h{left:60px;top:55px;font:700 36px/46px "Microsoft YaHei UI","Microsoft YaHei",sans-serif}
+.sg-hl{left:60px;top:112px;width:228px;height:2px;background:#d6d6d6}
+.sg-vl{left:880px;top:150px;width:1px;height:600px;background:#d6d6d6}
+
+/* 选项列表：一行 56 高；左边 10px 黄方块沿列滑到当前行；画质细项缩进、灰字、前面一根短线 */
+.sg-rows{left:60px;top:140px;width:790px;height:630px}
+.sg-ind{position:absolute;left:2px;top:0;width:10px;height:10px;background:#ffc822;z-index:2;transition:transform .5s cubic-bezier(.7,0,.2,1);pointer-events:none}
+.sg-row{position:relative;display:flex;align-items:center;height:56px;padding-left:28px;cursor:none}
+.sg-row .nm{width:262px;flex:none;font:700 calc(20px * var(--sg-fs, 1))/56px "Microsoft YaHei UI","Microsoft YaHei",sans-serif;color:#424242;white-space:nowrap;transition:color .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.sg-row.sub .nm{padding-left:26px;font-size:calc(17px * var(--sg-fs, 1));color:#818181}
+.sg-row.sub::before{content:'';position:absolute;left:32px;top:27px;width:12px;height:2px;background:#bdbdbd}
+.sg-row.on .nm{color:#000;transform:translateX(4px)}
+.sg-row.sub.on .nm{color:#424242}
+.sg-row::after{content:'';position:absolute;left:28px;right:0;bottom:0;height:1px;background:rgba(0,0,0,.06)}
+.sg-row .ct{display:flex;align-items:center;flex:1}
+
+/* 滑条：一根 2px 灰线 + 黑色已填部分 + 16px 黄方块（拖动时转 45°） */
+.sg-sl{position:relative;width:340px;height:32px;cursor:none}
+.sg-sl .ln{position:absolute;left:0;right:0;top:15px;height:2px;background:#bdbdbd}
+.sg-sl .fl{position:absolute;left:0;top:15px;height:2px;background:#111}
+.sg-sl .kb{position:absolute;top:16px;width:16px;height:16px;margin:-8px 0 0 -8px;background:#ffc822;box-shadow:0 0 0 2px #111;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.sg-sl:hover .kb{transform:scale(1.15)}
+.sg-sl.drag .kb{transform:rotate(45deg) scale(1.15)}
+.sg-num{margin-left:22px;min-width:44px;font:700 18px/1 Inter,"Microsoft YaHei UI",sans-serif;color:#424242}
+
+/* 开关：56×28 黑框，里面一个方块左右移动；开 = 方块在右、变黄 */
+.sg-tog{position:relative;width:56px;height:28px;box-shadow:inset 0 0 0 2px #111;cursor:none}
+.sg-tog i{position:absolute;left:5px;top:5px;width:18px;height:18px;background:#9a9a9a;transition:left .4s cubic-bezier(.7,0,.2,1),background .3s,transform .4s cubic-bezier(.7,0,.2,1)}
+.sg-tog.on i{left:33px;background:#ffc822;box-shadow:0 0 0 2px #111}
+.sg-tog:hover i{transform:rotate(45deg)}
+
+/* 左右选择器：◂ 值 ▸，下面一排小圆点表示有几个选项、当前是第几个 */
+.sg-sel{position:relative;width:340px;height:44px;display:flex;align-items:center;justify-content:space-between}
+.sg-sel span{flex:1;text-align:center;font:700 calc(19px * var(--sg-fs, 1))/30px "Microsoft YaHei UI","Microsoft YaHei",Inter,sans-serif;color:#111;white-space:nowrap}
+.sg-sel .ar{position:relative;width:30px;height:30px;cursor:none}
+.sg-sel .ar::before{content:'';position:absolute;left:9px;top:8px;border:7px solid transparent}
+.sg-sel .ar.l::before{border-right:10px solid #424242;border-left:0}
+.sg-sel .ar.r::before{left:12px;border-left:10px solid #424242;border-right:0}
+.sg-sel .ar:hover::before{border-left-color:#000;border-right-color:#000}
+.sg-sel .ar.l:hover{transform:translateX(-3px)}.sg-sel .ar.r:hover{transform:translateX(3px)}
+.sg-sel .ar{transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.sg-sel .dots{position:absolute;left:0;right:0;bottom:-2px;display:flex;justify-content:center;gap:6px}
+.sg-sel .dots u{width:5px;height:5px;background:#c4c4c4}
+.sg-sel .dots u.on{background:#111}
+
+/* 按键框：白底黑边；等待按键时变黄并闪 */
+.sg-key{min-width:120px;height:40px;padding:0 16px;background:#fff;box-shadow:inset 0 0 0 2px #111;text-align:center;font:700 18px/40px Inter,"Microsoft YaHei UI",sans-serif;cursor:none;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.sg-key:hover{transform:translateY(-2px)}
+.sg-key.wait{background:#ffc822;animation:sg-blink .9s steps(2) infinite}
+@keyframes sg-blink{50%{box-shadow:inset 0 0 0 2px transparent}}
+
+/* 说明栏 */
+.sg-desc{left:920px;top:150px;width:500px}
+.sg-desc h3{margin:0 0 18px;font:700 28px/1.3 "Microsoft YaHei UI","Microsoft YaHei",sans-serif}
+.sg-desc p{margin:0;font:400 calc(18px * var(--sg-fs, 1))/1.8 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;letter-spacing:1px;color:#222}
+.sg-desc p.df{margin-top:22px;font-size:14px;color:#818181}
+.sg-ref{display:flex;gap:16px;margin-top:22px;padding:18px;width:fit-content;background:#0a0a0a}
+.sg-ref i{width:64px;height:64px}
+
+/* 底部：恢复本页默认 + 键盘提示 */
+.sg-foot{left:60px;right:60px;bottom:44px;display:flex;align-items:center;justify-content:space-between}
+.sg-foot span{font:700 14px/1 "Microsoft YaHei UI","Microsoft YaHei","Segoe UI Symbol",sans-serif;color:#818181;letter-spacing:1px}
+.sg-btn{display:inline-block;height:44px;padding:0 24px;box-shadow:inset 0 0 0 2px #111;font:700 17px/44px "Microsoft YaHei UI","Microsoft YaHei",sans-serif;cursor:none;transition:background .25s,color .25s}
+.sg-btn:hover{background:#ffc822}
+.sg-btn.y{background:#111;color:#fff}
+.sg-btn.y:hover{background:#ffc822;color:#000}
+
+/* 分辨率确认：盖住卡片，10 秒倒计时 */
+.sg-confirm{inset:0;border-radius:31px;background:rgba(229,229,229,.75);display:none;align-items:center;justify-content:center;z-index:20}
+.sg-confirm.on{display:flex}
+.sg-confirm .in{width:540px;padding:40px 44px;background:#fff;box-shadow:0 4px 4px rgba(0,0,0,.25)}
+.sg-confirm h3{margin:0 0 12px;font:700 28px/1.3 "Microsoft YaHei UI","Microsoft YaHei",sans-serif}
+.sg-confirm p{margin:0 0 28px;font:400 18px/1.6 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;color:#424242}
+.sg-confirm p b{font:700 22px Inter,sans-serif;color:#000}
+.sg-confirm .bt{display:flex;gap:16px}
+
+/* 减弱动效：所有 CSS 过渡缩到很短（WAAPI 动画在 settings.js 里统一缩短） */
+.reduce-motion *{transition-duration:.08s!important;animation-duration:.08s!important}

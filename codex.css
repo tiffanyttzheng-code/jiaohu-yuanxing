@@ -1,0 +1,234 @@
+/* 图鉴内容页（codex.js）。设计稿：Figma 390:278（浏览）/ 390:144（书翻开），画布 1920×1080。
+   左边：雕像（从下方升起）+ 分类滚动条（8 条线）；右边：斜白板里 4×2 的卡堆，顶上一条斜条放种类标签；
+   点卡堆展开扇形，点卡翻成书；扇形和书出现时，雕像和白板被推到后面压暗。
+   卡堆、扇形用平行投影（竖边竖直）；只有书打开的那一刻用真透视。配色只用黑白灰 + 黄。 */
+.cdx{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:30;display:none;overflow:hidden;color:#000;
+  background:linear-gradient(75.236deg,#e8e8e8 62.357%,#7b7b7b 100%);
+  font-family:Inter,"Microsoft YaHei","Noto Sans SC",sans-serif;user-select:none}
+.cdx.on{display:block}
+.cdx *{box-sizing:border-box}
+.cdx .a{position:absolute}
+.cdx img{display:block;max-width:none;pointer-events:none}
+
+/* 背景：地砖带 / 网点 / 光晕 */
+.cdx .tw{position:absolute;pointer-events:none}
+.cdx .ti{position:absolute;left:50%;top:50%;width:100px;height:100px;margin:-50px 0 0 -50px}
+.cdx .tl .ti{background:#f3f3f3;transform:rotate(8.7deg)}
+.cdx .td .ti{background:#c7c7c7;transform:rotate(8.7deg)}
+.cdx .ta .tw{width:136.604px;height:136.604px}
+.cdx .ta .ti{background:#e0e0e0;transform:rotate(-120deg)}                         /* 最后面：陡斜的浅色条带 */
+.cdx .tb .tw{width:124.979px;height:124.979px}
+.cdx .tb .ti{background:#d9d9d9;transform:rotate(162.9deg) scaleY(-1)}
+.cdx .tc .tw{width:140.905px;height:140.905px}
+.cdx .tc .ti{background:rgba(217,217,217,.44);transform:rotate(130.1deg) scaleY(-1)}
+.cdx .tl .tw,.cdx .td .tw{width:113.98px;height:113.98px}
+.cdx-band{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none}
+.cdx-dark{position:absolute;left:898px;top:664px;width:941px;height:236px;clip-path:polygon(854.5px 0,0 5.31px,0 232.64px,941px 236px);pointer-events:none}
+.cdx-dark .tw{margin:-664px 0 0 -898px}
+.cdx-panel{position:absolute;left:898px;top:224px;width:941px;height:678px;transform:scaleX(-1);pointer-events:none}   /* 设计稿 403:592：白板把种类标签那一块也包进来了（高 678） */
+.cdx-tabbg{position:absolute;left:898px;top:222px;width:854px;height:83px;pointer-events:none}
+.cdx-tabline{position:absolute;left:926px;top:314px;width:789px;height:3px;pointer-events:none}
+.cdx-glow{position:absolute;left:103.9px;top:98.9px;width:944.2px;height:944.2px;pointer-events:none}
+
+/* 左：雕像组（升起）*/
+.cdx-pole{position:absolute;left:566px;top:859px;width:33px;height:224px;background:#d9d9d9;border:9px solid #000}
+.cdx-statue{position:absolute;left:351px;top:303px;width:463px;height:589px;object-fit:cover;opacity:.74}
+
+/* 左：分类滚动条（8 条线）。选中那条拉长变黑，名字标签从它旁边弹出 */
+.cdx-tick{position:absolute;left:0;top:0;width:48px;height:9px;margin-top:-4.5px;transition:transform .3s cubic-bezier(.2,.9,.25,1),background .25s,opacity .25s}   /* 切分类：快出慢收，干脆 */
+.cdx-hit{position:absolute;left:20px;width:110px;height:40px;margin-top:-20px;cursor:none;z-index:6}
+.cdx-ticks{position:absolute;left:0;top:0;width:0;height:0}
+.cdx-sel{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;transition:transform .3s cubic-bezier(.2,.9,.25,1);will-change:transform}
+.cdx-sel .lbw{position:absolute;left:0;top:-90px;width:520px;height:180px}
+.cdx-sel .bl{position:absolute;left:115px;top:37.5px;width:193px;height:87px;transition:width .3s cubic-bezier(.2,.9,.25,1)}
+.cdx-sel .tx{position:absolute;left:126px;top:57px;width:272px;height:60px;font:400 36px/60px var(--font);color:#fff;white-space:nowrap;transform:rotate(-.38deg)}
+
+/* 顶栏 */
+.cdx-bar{position:absolute;left:45px;top:18px;width:1779px;height:72px;border-radius:15px;background:rgba(255,255,255,.43)}
+.cdx .wb{position:absolute;background:#fff;border-radius:10px}
+.cdx .tt{position:absolute;font:700 48px/59px Inter,"Microsoft YaHei",sans-serif;color:#000;white-space:nowrap;transform:rotate(-.38deg)}
+.cdx .chv{position:absolute;width:36.056px;height:8px;border-radius:4px;background:#000;margin:-4px 0 0 -18px}
+.cdx-dd{position:absolute;left:1504px;top:26px;width:307px;height:55px;cursor:none;z-index:7}
+.cdx-menu{position:absolute;left:1504px;top:86px;width:307px;border-radius:10px;background:#fff;box-shadow:0 12px 22px rgba(0,0,0,.25);padding:6px;z-index:8;display:none}
+.cdx-menu.on{display:block}
+.cdx-menu div{height:50px;line-height:50px;padding:0 20px;border-radius:8px;font:700 30px/50px "Microsoft YaHei",sans-serif;cursor:none}
+.cdx-menu div:hover{background:#ffc822}
+.cdx-menu div.cur{color:#999}
+.cdx-search{position:absolute;left:121px;top:26px;width:250px;height:55px;border:0;outline:0;border-radius:10px;background:rgba(255,255,255,.6);padding:0 16px;font:600 26px/55px "Microsoft YaHei",sans-serif;color:#111;z-index:7}
+.cdx-close{position:absolute;left:1845px;top:30px;width:42px;height:45px;cursor:none;z-index:7}
+.cdx-close:hover img{transform:rotate(90deg)}
+.cdx-close img{width:100%;height:100%;transition:transform .3s var(--glide)}
+
+/* 种类标签：「全部」在左，其余靠右；选中的底色 #f8f8f8，其余 #d9d9d9 */
+.cdx-tabs{position:absolute;left:0;top:0;width:0;height:0;z-index:5}
+.cdx-tab{position:absolute;top:248.5px;height:37px;border-radius:7px;background:#d9d9d9;font:700 24px/37px Inter,"Microsoft YaHei",sans-serif;color:#8b8b8b;text-align:center;white-space:nowrap;cursor:none;transition:background .25s,color .25s}
+.cdx-tab:hover{color:#555}
+.cdx-tab.sel{background:#f8f8f8}
+
+/* 页码 */
+.cdx-pg{position:absolute;left:1700px;top:847px;width:130px;height:54px;font:700 36px/54px Inter,sans-serif;color:#000;text-align:center;cursor:none;z-index:5}
+.cdx-pg i{font-style:normal;opacity:0;transition:opacity .25s;font-size:26px;position:absolute;top:0}
+.cdx-pg i:first-child{left:-24px}.cdx-pg i:last-child{right:-24px}
+.cdx-pg:hover i{opacity:1}
+.cdx-pg.one{display:none}
+.cdx-empty{position:absolute;left:898px;width:941px;top:545px;text-align:center;font:700 34px/1 "Microsoft YaHei",sans-serif;color:#7c7c7c;display:none}
+
+/* 卡堆：锚点在底边中心，卡片底边对齐 */
+.cdx-stage,.cdx-fan{position:absolute;left:0;top:0;width:1920px;height:1080px}
+.cdx-stage{z-index:2}.cdx-fan{z-index:3;pointer-events:none}.cdx-fan .fc{pointer-events:auto}
+.cs{position:absolute;width:0;height:0;transition:opacity .6s var(--glide),filter .6s var(--glide)}
+.cs-in{position:absolute;left:0;top:0;width:0;height:0;transition:transform .45s cubic-bezier(.3,1.5,.5,1);cursor:none}
+.cs:hover .cs-in{transform:translateY(-14px)}
+.cs:hover .cs-in .cl.front{box-shadow:0 12px 14px rgba(0,0,0,.22)}
+.cs.dim{opacity:.18;filter:blur(2px);pointer-events:none}
+.cs.gone{opacity:0;pointer-events:none;transition:opacity .3s ease .12s}   /* 被点的这摞在扇形 / 书飞出去之后才淡掉，不再瞬间消失 */
+.cl{position:absolute;overflow:hidden;border:2px solid #000;border-radius:6px;background:#f3f3f3}
+.cl img{position:absolute}
+.cl.one{left:-63px;top:-131px;width:126px;height:131px}
+.cl.one img{left:-16.33%;top:-10.58%;width:142.68%;height:144.71%}
+.cl.st{left:-75.5px;top:-159px;width:126px;height:131px}                 /* 前一张（设计稿 1162,571），底边比单张高 28 */
+.cl.st img{left:-16.33%;top:-10.58%;width:142.68%;height:144.71%}
+.cl.b1{transform-origin:50% 50%;transform:translate(6.4px,23.2px) rotate(-5.93deg)}
+.cl.b2{transform-origin:50% 50%;transform:translate(20.6px,11.4px) rotate(3.2deg)}
+.cs:hover .cc.top{transform:none}
+.nmbar{position:absolute;left:-68.5px;top:15px;width:137px;height:31px;display:flex;align-items:center;justify-content:center;background:url(assets/codex/pill-137.png) 0 0/100% 100% no-repeat;color:#000;font-weight:400;line-height:1;white-space:nowrap;overflow:hidden;transform:rotate(-.4deg)}   /* 新稿：白色药丸 + 细黑边，黑字；文字永远一行，字号按字数在 codex.js 里算 */
+.nmbar.w2{left:-92.5px;width:185px;background-image:url(assets/codex/pill-185.png)}
+.cs.multi .nmbar{margin-left:-6px}
+
+/* 扇形：卡绕各自下方的同一个圆心转开 */
+.fc{position:absolute;left:759px;top:415px;width:295px;height:306px;transform:translate(var(--x),var(--y)) rotate(var(--r));transform-origin:50% 50%;
+  transition:transform .4s cubic-bezier(.3,1.5,.5,1),opacity .6s var(--glide),filter .6s var(--glide);cursor:none}
+.fc:hover{transform:translate(var(--x),calc(var(--y) - 14px)) rotate(var(--r));z-index:60 !important}
+.fc .cd{position:absolute;inset:0;border:2px solid #000;border-radius:6px;overflow:hidden;background:#f3f3f3;transition:box-shadow .4s}
+.fc:hover .cd{box-shadow:0 14px 16px rgba(0,0,0,.22)}
+.fc .cd img{position:absolute;left:-16.33%;top:-10.58%;width:142.68%;height:144.71%}
+.fc .nm{position:absolute;left:-7px;top:314.5px;width:309px;height:57px;display:flex;align-items:center;justify-content:center;background:url(assets/codex/pill-309.png) 0 0/100% 100% no-repeat;font:400 32px/1 "Microsoft YaHei",sans-serif;color:#000;white-space:nowrap;transform:rotate(-.4deg)}
+.cdx-fan.back .fc{opacity:.14;filter:blur(3px);pointer-events:none}
+.fan-title{position:absolute;left:645px;top:157px;width:591px;pointer-events:none}   /* 新稿：标题居中，简介靠左小字 */
+.fan-title h2{margin:0;height:114px;padding-left:18px;text-align:center;font:400 75px/1.15 var(--font);color:#000;opacity:.75}
+.fan-title p{margin:0;font:700 24px/1.3 "Microsoft YaHei",sans-serif;color:#5f5f5f}
+.bk-head{position:absolute;left:470px;top:157px;width:919px;text-align:center;pointer-events:none;z-index:11}   /* 书页：标题 + 简介都居中 */
+.bk-head h2{margin:0;height:114px;font:400 75px/1.15 var(--font);color:#000;opacity:.75}
+.bk-head p{margin:0;font:700 24px/1.3 "Microsoft YaHei",sans-serif;color:#5f5f5f}
+.cdx-fan.back .fan-title{opacity:0;transition:opacity .4s}
+
+/* 景深：扇形 / 书出现时，雕像和白板被推到后面压暗 */
+.cdx-statuewrap,.cdx-panelwrap{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;transition:transform .9s var(--glide),opacity .9s var(--glide),filter .9s var(--glide)}
+.cdx-panelwrap>*{pointer-events:auto}
+.cdx.deep .cdx-statuewrap{transform:translateX(-90px) scale(.92);transform-origin:574px 600px;opacity:0}
+.cdx.deep .cdx-panelwrap{transform:translateX(70px);opacity:0}
+.cdx-stage{transition:transform .9s var(--glide),opacity .9s var(--glide)}
+.cdx.deep .cdx-stage{transform:translateX(70px);opacity:0;pointer-events:none}
+.cdx-rail{transition:opacity .9s var(--glide)}
+.cdx.deep .cdx-rail{opacity:0;pointer-events:none}
+.cdx-glow{transition:filter .9s var(--glide)}
+.cdx.deep .cdx-glow{filter:opacity(0)}
+.cdx.deep .cdx-tabs,.cdx.deep .cdx-pg{opacity:0;pointer-events:none}
+.cdx-tabs,.cdx-pg{transition:opacity .4s var(--glide)}
+
+/* 书：3D 翻页。书脊在 .bk 左边缘，封面（卡）绕书脊翻开，背面变左页，露出右页 */
+.bk{position:absolute;left:625px;top:260px;width:605px;height:770px;transform:scale(.7686);perspective:2600px;perspective-origin:0 50%;z-index:10}
+.bk-sp{position:absolute;inset:0;transition:transform .95s var(--glide)}
+.bk.spread .bk-sp{transform:translateX(298px)}
+.bk-tilt{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(3deg) rotateY(-2deg)}
+.bk-shadow{position:absolute;left:-605px;top:690px;width:1815px;height:120px;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.45),transparent 68%);transform:translateZ(-30px);opacity:0;transition:opacity .9s}
+.bk.spread .bk-shadow{opacity:1}
+.leaf{position:absolute;left:0;top:0;width:605px;height:770px;transform-origin:0 50%;transform-style:preserve-3d;transition:transform .95s var(--glide)}
+.leaf.l0{transform:translateZ(3px)}
+.leaf.l0.open{transform:translateZ(3px) rotateY(-180deg)}
+.leaf.l1{transform:translateZ(1px)}
+.leaf.l1.open{transform:translateZ(6px) rotateY(-180deg)}
+.base{position:absolute;left:0;top:0;width:605px;height:770px;transform:translateZ(-1px)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.face.bkf{transform:rotateY(180deg)}
+.pg{background:#f4f4f2;color:#111;border:6px solid #0b0b0b;border-radius:6px 16px 16px 6px;padding:50px 52px;overflow:hidden}
+.pg.lf{border-radius:16px 6px 6px 16px}
+.pg .art{height:300px;background:#cfcfcf;border:5px solid #0b0b0b;border-radius:8px;overflow:hidden;margin-bottom:26px;position:relative}
+.pg .art img{position:absolute;left:-16.33%;top:-10.58%;width:142.68%;height:144.71%}
+.pg h3{margin:0;font:400 54px/1.15 var(--font);color:#0b0b0b}
+.pg .sub{margin:6px 0 22px;font:700 22px/1.3 "Microsoft YaHei",sans-serif;color:#7a7a7a}
+.pg p{margin:0;font:500 21px/1.75 "Microsoft YaHei",sans-serif;color:#222}
+.pg .tx{font:500 20px/1.85 "Microsoft YaHei",sans-serif;color:#1c1c1c;white-space:pre-wrap;overflow-y:auto;max-height:600px;scrollbar-width:none}
+.pg .tx::-webkit-scrollbar{display:none}
+.pg .hd{font:700 24px/1 "Microsoft YaHei",sans-serif;color:#111;margin-bottom:18px;padding-bottom:14px;border-bottom:4px solid #0b0b0b}
+.pg .hd.h3{margin-top:26px}
+.pg .nil{color:#9a9a9a}
+.pg .meta .mr{display:flex;gap:14px;line-height:1.7;margin-bottom:10px;font:600 21px/1.7 "Microsoft YaHei",sans-serif;color:#222}
+.pg .meta .mr b{flex:0 0 84px;color:#888;font-weight:700}
+.pg .meta .mr span{flex:1}
+.pg .pn{position:absolute;bottom:22px;font:700 20px/1 Inter,sans-serif;color:#999}
+.pg .turn{position:absolute;bottom:18px;width:44px;height:44px;font:700 30px/44px Inter,sans-serif;text-align:center;color:#0b0b0b;cursor:none;border-radius:50%}
+.pg .turn:hover{background:#ffc822}
+.pg.rt .pn{left:52px}.pg.rt .turn{right:30px}
+.pg.lf .pn{right:52px}.pg.lf .turn{left:30px}
+.face.cover{background:#f3f3f3;border:6px solid #0b0b0b;border-radius:6px 16px 16px 6px}
+.face.cover .art{position:absolute;left:36px;top:36px;right:36px;height:548px;background:#cfcfcf;border-radius:8px;overflow:hidden}
+.face.cover .art img{position:absolute;left:-16.33%;top:-10.58%;width:142.68%;height:144.71%}
+.face.cover .nm{position:absolute;left:0;right:0;bottom:60px;text-align:center;font:700 56px/1.2 var(--font);color:#111}
+.bk-nav{position:absolute;top:-50px;font:700 22px/1 "Microsoft YaHei",sans-serif;color:#111;padding:10px 18px;border-radius:10px;background:rgba(255,255,255,.8);cursor:none;opacity:0;transition:opacity .5s .9s;z-index:12}
+.bk.spread .bk-nav{opacity:1}
+.bk-nav:hover{background:#ffc822}
+.bk-nav.pv{left:-605px}.bk-nav.nx{left:470px}
+/* 翻页箭头：Figma 513:750 Group 840/841，49×80 黑色折线、线宽 10；放在书外两侧（书 459~1389，左隔 146、右隔 141，中心比书高 35） */
+.bk-arr{position:absolute;left:0;top:0;width:0;height:0;z-index:12}
+.bk-arr .ar{position:absolute;top:570px;width:48.9px;height:80px;color:#000;cursor:none;transition:color .2s}
+.bk-arr .ar svg{display:block;overflow:visible}
+.bk-arr .ar:hover{color:#ffc822}
+.bk-arr .pv{left:313.4px}
+.bk-arr .nx{left:1530px;transform:scaleX(-1)}
+
+.cdx-burst{position:absolute;width:14px;height:14px;background:#ffc822;border:3px solid #0b0b0b;pointer-events:none;z-index:20}
+
+/* 文字特效 */
+.fxs{display:inline-block;overflow:hidden;vertical-align:bottom;line-height:inherit;padding-top:.12em;margin-top:-.12em}
+.fxc{display:inline-block;will-change:transform}
+.flp{display:inline-block;position:relative;perspective:300px}
+.flp .flo{display:inline-block}
+.flp .fln{position:absolute;left:0;top:0;display:inline-block}
+.cdx-pg span{display:inline-block;min-width:120px}
+.cdx-spark{position:absolute;width:26px;height:4px;border-radius:2px;margin:-2px 0 0 0;transform-origin:0 50%;pointer-events:none;z-index:25}
+
+
+/* 缓慢的连续运动（不要抢戏：一格 ≈ 9 秒，约 11px/s；光环 7 秒一个呼吸） */
+.cdx .tr{position:absolute;left:0;top:0;width:0;height:0}
+@keyframes cdxTl{to{transform:translate(103.76px,15.89px)}}
+/* 由前到后：前面的浅色带 9s/格（≈11.7px/s）→ C 6.5s（≈16px/s）→ B 4.8s（≈22px/s）→ A 3.4s（≈31px/s），越靠后越快 */
+@keyframes cdxTb{to{transform:translate(-101.32px,31.17px)}}
+@keyframes cdxTc{to{transform:translate(68.27px,-81.08px)}}
+@keyframes cdxTa{to{transform:translate(52.49px,90.91px)}}
+.cdx-band.tl .tr,.cdx-dark .tr{animation:cdxTl 9s linear infinite}
+.cdx-band.ta .tr{animation:cdxTa 3.4s linear infinite}
+.cdx-band.tb .tr{animation:cdxTb 4.8s linear infinite}
+.cdx-band.tc .tr{animation:cdxTc 6.5s linear infinite}
+@keyframes cdxBreath{0%{transform:scale(.9);opacity:.8}100%{transform:scale(1.1);opacity:1}}
+.cdx-glow{transform-origin:50% 50%;animation:cdxBreath 7s ease-in-out infinite alternate}
+@media (prefers-reduced-motion:reduce){.cdx .tr,.cdx-glow{animation:none}}
+
+.cdx-dots{position:absolute;left:0;top:-2px;width:1920px;height:500px;pointer-events:none}
+
+/* 顶栏：浏览态（t1）/ 扇形态（t2：图鉴 | 作品百科 | 当前分类 ﹀）；书页不显示顶栏 */
+.cdx-top{transition:opacity .5s var(--glide)}
+.cdx-t1,.cdx-t2{position:absolute;left:0;top:0;width:0;height:0;transition:opacity .5s var(--glide)}
+.cdx-t2{opacity:0;pointer-events:none}
+.cdx[data-m=fan] .cdx-t1{opacity:0;pointer-events:none}
+.cdx[data-m=fan] .cdx-t2{opacity:1;pointer-events:auto}
+.cdx[data-m=book] .cdx-top{opacity:0;pointer-events:none}
+.cdx-fb{position:absolute;cursor:none;z-index:7}
+
+/* ===== 顶栏新稿（Figma 448:2061 / 450:2132 / 359:12820）：返回箭头 + 搜索框 | 图鉴 · 作品百科 ﹀ · 分类 | ✕；文字 40px Inter Bold ===== */
+.cdx-bar{left:45px;top:29px;width:1779px;height:72px;border-radius:15px;background:rgba(227,227,227,.7)}
+.cdx .tt{font-size:40px;line-height:60px}
+.cdx-back{position:absolute;left:76px;top:41px;width:29px;height:48px;cursor:none;z-index:7}
+.cdx-back img{position:absolute;left:-9.5px;top:9.5px;width:48px;height:29px;transform:rotate(90deg);transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+.cdx-back:hover img{transform:rotate(90deg) translateY(6px)}
+.cdx-search{left:126px;top:37px;width:284px;height:55px;background:rgba(255,255,255,.7);padding:0 70px 0 16px;font:600 24px/55px "Microsoft YaHei",sans-serif}
+.cdx-dd{left:1566px;top:37px;width:241px;height:55px}
+.cdx-menu{left:1566px;top:98px;width:241px}
+.cdx-close{left:1845px;top:41px}
+.cdx-fb{z-index:7}
+/* 名字药丸里的字垂直居中：微软雅黑的字形墨迹比字框中心低 0.05em（下沉部分大），flex 居中后看起来偏下；
+   下边留 0.1em 内边距 = 文字整体上提 0.05em，墨迹正好落在药丸正中 */
+.nmbar,.fc .nm{box-sizing:border-box;padding-bottom:.1em}
+/* 作品百科卡片可以按住拖动：图片不让浏览器拖走，触屏上横向拖动交给页面 */
+.atlas .wc img{-webkit-user-drag:none;user-select:none}
+.atlas .wc{touch-action:pan-y}

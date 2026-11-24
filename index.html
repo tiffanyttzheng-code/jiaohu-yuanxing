@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>主菜单交互原型</title>
+<link rel="stylesheet" href="style.css?v=1121g">
+<link rel="stylesheet" href="subpages.css">
+<link rel="stylesheet" href="codex.css">
+<link rel="stylesheet" href="chars.css?v=1121e">
+<link rel="stylesheet" href="tasks.css">
+<link rel="stylesheet" href="settings.css">
+<link rel="stylesheet" href="shop.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- 悬停描边：先在透明轮廓外描一圈极细白边，再描黑色粗边。
+       每圈都是「膨胀 → 模糊 → 陡峭阈值」，模糊+阈值会把手绘边缘的毛刺和抖动磨平。
+       olL 用于大图（留 12% 余量），olS 用于小图（留 40% 余量） -->
+  <filter id="olL" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="w0"/>
+    <feGaussianBlur in="w0" stdDeviation="2.4" result="w1"/>
+    <feComponentTransfer in="w1" result="w2"><feFuncA type="linear" slope="14" intercept="-6.5"/></feComponentTransfer>
+    <feMorphology in="w2" operator="dilate" radius="7" result="k0"/>
+    <feGaussianBlur in="k0" stdDeviation="1.8" result="k1"/>
+    <feComponentTransfer in="k1" result="k2"><feFuncA type="linear" slope="14" intercept="-6.5"/></feComponentTransfer>
+    <feFlood flood-color="#0b0b0b" result="blk"/><feComposite in="blk" in2="k2" operator="in" result="black"/>
+    <feFlood flood-color="#ffffff" result="wht"/><feComposite in="wht" in2="w2" operator="in" result="white"/>
+    <feMerge><feMergeNode in="black"/><feMergeNode in="white"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="olS" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="w0"/>
+    <feGaussianBlur in="w0" stdDeviation="2.4" result="w1"/>
+    <feComponentTransfer in="w1" result="w2"><feFuncA type="linear" slope="14" intercept="-6.5"/></feComponentTransfer>
+    <feMorphology in="w2" operator="dilate" radius="7" result="k0"/>
+    <feGaussianBlur in="k0" stdDeviation="1.8" result="k1"/>
+    <feComponentTransfer in="k1" result="k2"><feFuncA type="linear" slope="14" intercept="-6.5"/></feComponentTransfer>
+    <feFlood flood-color="#0b0b0b" result="blk"/><feComposite in="blk" in2="k2" operator="in" result="black"/>
+    <feFlood flood-color="#ffffff" result="wht"/><feComposite in="wht" in2="w2" operator="in" result="white"/>
+    <feMerge><feMergeNode in="black"/><feMergeNode in="white"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="inkf" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency=".011" numOctaves="3" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="260" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<div id="viewport">
+  <div id="stage">
+    <div id="room"></div>
+    <canvas id="ink" width="1920" height="1080"></canvas>
+    <div id="pages"></div>
+    <div id="inkspread"><i class="y"></i><i class="b"></i></div>
+    <div id="wipe"></div>
+    <div id="cursor"><i></i></div>
+    <div id="flash"></div>
+  </div>
+</div>
+<script src="assets/book/mask.js"></script>
+<script src="atlas.js"></script>
+<script src="codex-data.js"></script>
+<script src="xiang-data.js"></script>
+<script src="codex-dots.js"></script>
+<script src="codex.js"></script>
+<script src="chars-data.js"></script>
+<script src="wardrobe-data.js"></script>
+<script src="chars.js?v=1121e"></script>
+<script src="tasks-data.js"></script>
+<script src="tasks.js"></script>
+<script src="settings.js"></script>
+<script src="shop.js"></script>
+<script src="assets/home3/hitmask.js?v=1121f"></script>
+<script src="main.js?v=1121f"></script>
+</body>
+</html>

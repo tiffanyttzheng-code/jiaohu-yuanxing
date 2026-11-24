@@ -1,0 +1,450 @@
+/* 角色图鉴页（chars.js）。设计稿 432:3615 / 433:4991，画布 1920×1080，配色黑白灰 + 黄，缓动统一 GLIDE。 */
+.chars.page.sub{background:linear-gradient(242.545deg,#fff 0%,#b2b2b2 96.17%);font-family:"Microsoft YaHei UI","Microsoft YaHei",Inter,sans-serif;color:#000;user-select:none}
+.chars *{box-sizing:border-box}
+.chars>div{position:absolute}
+.chars .nil{color:#8b8b8b;font:700 20px/1.6 "Microsoft YaHei",sans-serif;padding:10px 4px}
+.chars img{display:block;max-width:none;pointer-events:none}
+:root{--chg:cubic-bezier(.7,0,.2,1)}
+
+/* 背景：透视地线 + 右上纹饰 */
+.ch-floor{left:0;top:80px;width:1920px;height:1000px;background:url(assets/chars/floor-lines-src.svg) 0 0/100% 100% no-repeat;-webkit-mask:url(assets/chars/floor-lines.svg) 0 137px/1920px 863px no-repeat;mask:url(assets/chars/floor-lines.svg) 0 137px/1920px 863px no-repeat}
+.ch-deco.a{left:1298px;top:-32px;width:724px;height:724px;-webkit-mask:url(assets/chars/deco-mask.svg) -36px 33px/658px 658px no-repeat;mask:url(assets/chars/deco-mask.svg) -36px 33px/658px 658px no-repeat}
+.ch-deco.a img{width:100%;height:100%;object-fit:cover}
+.ch-deco.b{left:1243px;top:-239px;width:940px;height:847px;-webkit-mask:url(assets/chars/deco-mask.svg) 19px 240px/658px 658px no-repeat,url(assets/chars/deco2-mask.svg) -85px 0/940px 847px no-repeat;mask:url(assets/chars/deco-mask.svg) 19px 240px/658px 658px no-repeat,url(assets/chars/deco2-mask.svg) -85px 0/940px 847px no-repeat;overflow:hidden}
+.ch-deco.b img{position:absolute;left:-182.83%;top:0;width:541.08%;height:350.73%;opacity:.58}
+
+/* 顶栏（新稿 450:2132）：返回箭头 + 搜索框 | 联系簿标签 + 关闭 */
+.ch-tbar{left:45px;top:29px;width:1779px;height:72px;border-radius:15px;background:rgba(255,255,255,.7)}
+.ch-back{left:76px;top:41px;width:29px;height:48px;cursor:none;z-index:9}
+.ch-back img{position:absolute;left:-9.5px;top:9.5px;width:48px;height:29px;transform:rotate(90deg);transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+.ch-back:hover img{transform:rotate(90deg) translateY(6px)}
+.ch-search{left:126px;top:37px;width:284px;height:55px;border-radius:10px;background:rgba(255,255,255,.7);z-index:9}
+.ch-search input{position:absolute;left:0;top:0;width:224px;height:55px;border:0;outline:0;background:transparent;padding:0 16px;font:600 24px/55px "Microsoft YaHei",sans-serif;color:#111}
+.ch-search img{position:absolute;left:220px;top:5px;width:51.559px;height:34.927px;transform:rotate(14.85deg);margin:4px 0 0 0}
+.ch-tab1{left:1645px;top:38px;width:161px;height:55px;border-radius:10px;background:#fff;text-align:center;font:700 40px/55px Inter,"Microsoft YaHei",sans-serif;transform:rotate(-.38deg)}
+.ch-x{left:1845px;top:41px;width:42px;height:45px;cursor:none;z-index:9}
+.ch-x img{width:100%;height:100%;transition:transform .3s var(--chg)}
+.ch-x:hover img{transform:rotate(90deg)}
+
+/* 名字块：真理 + < 阵营 >，在白板右上、半身像后上方；列表视图跟着右白板挪到右边 */
+.ch-name{left:1357px;top:200px;width:300px;height:160px;pointer-events:none;transition:left .9s var(--chg)}
+.v-list .ch-name{left:1646px}
+.ch-name .nm{display:flex;font:400 96px/1.1 var(--font);color:#000;letter-spacing:-6.72px;transform:rotate(-.38deg)}
+.ch-name .nm span{-webkit-text-stroke:12px #ebdfc6;paint-order:stroke fill;position:relative;text-shadow:0 0 0 #000}
+.ch-name .sb{margin:-4px 0 0 46px;font:700 24px/1.2 Inter,"Microsoft YaHei",sans-serif;color:#5e5e5e;transform:rotate(-.38deg)}
+
+/* 白板：详情视图 = 右边整块大白板 + 左边一条头像栏；列表视图 = 左边大块头像网格 + 右边窄白板 */
+.ch-right{left:184px;top:177px;width:1673px;height:822px;background:#fff;border-radius:28px;transition:left .9s var(--chg),width .9s var(--chg)}
+.ch-main{left:59px;top:177px;width:91px;height:822px;background:#fff;border-radius:39px;transition:width .9s var(--chg);overflow:hidden}
+.v-list .ch-right{left:1083px;width:774px}
+.v-list .ch-main{width:982px}
+
+/* 头像栏 */
+.ch-rail{position:absolute;left:0;top:18px;width:91px;height:742px;overflow-y:auto;scrollbar-width:none;padding:2px 0 40px;transition:opacity .45s var(--chg) .4s,transform .6s var(--chg) .35s}   /* 回来时等白板收窄后再淡入 */
+.ch-rail::-webkit-scrollbar{display:none}
+.v-list .ch-rail{opacity:0;transform:translateX(-46px);pointer-events:none;transition:opacity .32s cubic-bezier(.3,.6,.4,1),transform .4s cubic-bezier(.2,.7,.3,1)}   /* 点九宫格：头像列表立刻向左淡出，不等白板（GLIDE 起步慢会像停顿） */
+.ch-av{position:relative;width:91px;height:90px;display:flex;align-items:center;justify-content:center;cursor:none}
+.ch-av .c{width:63px;height:63px;border-radius:50%;border:3px solid #111;overflow:hidden;background:#d9d9d9;transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+.ch-av:hover .c{transform:scale(1.12)}
+.ch-av .c img{width:100%;height:100%;object-fit:cover}
+.ch-av.sel .c{width:73px;height:73px;border:5px solid #ffc822;box-shadow:0 0 0 2px #111}
+
+/* 底部的九宫格 / 返回按钮 */
+.ch-viewbtn{left:77px;top:954px;width:55px;height:30.446px;cursor:none;z-index:6}   /* 半圆底座 55×30.4，方块在底座上方 10px、左边 14px（设计稿 433:5166 / 5169） */
+.ch-viewbtn>img{position:absolute;left:0;top:0;width:55px;height:30.446px}
+.ch-viewbtn i{position:absolute;left:14px;top:-10px;width:28px;height:28px;display:grid;grid-template-columns:repeat(3,8px);gap:2px;transform-origin:50% 50%}
+.ch-viewbtn u{display:block;width:8px;height:8px;background:#636363;transition:transform .5s var(--chg),opacity .4s}
+/* 九宫格 → 三宫格：转一圈的同时，左右两列缩没，只剩中间一列；回来时反过来，从中间长出两列 */
+.v-list .ch-viewbtn u:nth-child(3n+1),.v-list .ch-viewbtn u:nth-child(3n){transform:scale(0);opacity:0}
+.ch-viewbtn u:nth-child(3n+1){transition-delay:.05s}.ch-viewbtn u:nth-child(3n){transition-delay:.12s}
+.ch-viewbtn:hover u{background:#111}
+
+/* 头像网格（列表视图） */
+.ch-grid{position:absolute;left:19px;top:20px;width:960px;height:741px;overflow-y:auto;scrollbar-width:none;display:grid;grid-template-columns:repeat(5,180px);grid-auto-rows:195px;gap:14px 11px;opacity:0;pointer-events:none;transition:opacity .5s var(--chg)}
+.ch-grid::-webkit-scrollbar{display:none}
+.v-list .ch-grid{opacity:1;pointer-events:auto;transition-delay:.35s}
+.ch-tile{position:relative;border-radius:21px;background:#d9d9d9;overflow:hidden;cursor:none;transition:transform .45s cubic-bezier(.3,1.5,.5,1),background .3s}
+.ch-tile:hover{transform:translateY(-8px)}
+.ch-tile.sel{background:#ffc822}
+.ch-tile img{position:absolute;left:18px;top:19px;width:144px;height:197px;object-fit:cover}
+.ch-tile span{position:absolute;right:12px;bottom:6px;font:400 32px/1.1 var(--font);color:#000;-webkit-text-stroke:5px #fff;paint-order:stroke fill}
+.ch-none{grid-column:1/-1;margin:60px 0 0 20px;font:700 24px/1.5 "Microsoft YaHei",sans-serif;color:#8b8b8b}
+/* 底部分类药丸 */
+.ch-pills{position:absolute;left:125px;top:761px;width:840px;height:46px;display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;opacity:0;pointer-events:none;transition:opacity .5s var(--chg)}
+.ch-pills::-webkit-scrollbar{display:none}
+.v-list .ch-pills{opacity:1;pointer-events:auto;transition-delay:.35s}
+
+/* 基本信息：详情视图在左栏，列表视图跟着右白板移到右边 */
+.ch-info{left:225px;top:205px;width:329px;height:440px;transition:left .9s var(--chg)}
+.v-list .ch-info{left:1130px}   /* 切到全列表：基本信息跟着白板的右缘一路平移到右白板里，落在半身像图层下面（DOM 顺序在 .ch-port 之前） */
+.ch-info .hd{height:40px;background:#ffc822;font:700 24px/40px "Microsoft YaHei UI","Microsoft YaHei",sans-serif;padding-left:36px;position:relative}
+.ch-info .hd em{position:absolute;left:10px;top:13px;width:17px;height:15px;background:#fff}
+.ch-info .rows{position:absolute;left:14px;top:53px;width:298px}
+.ch-info .r{height:53.3px;display:flex;align-items:flex-end;padding:0 0 6px 10px;border-bottom:2px solid #cfcfcf;font:400 18px/1.2 "Microsoft YaHei",Inter,"Microsoft YaHei",sans-serif}
+.ch-info .r:last-child{border-bottom:0}
+.ch-info .r i{font-style:normal;width:72px;color:#979797;flex:none}
+.ch-info .r b{font-weight:400;width:216px;max-height:50px;overflow:hidden;line-height:1.2}   /* 长的值（能力名、居住地）缩小字号，最多两行，不挤进中栏 */
+
+/* Q 版立绘框 + 换装 / 操控 */
+.ch-chibi{left:236px;top:640px;width:310px;height:310px;background:#d9d9d9;border-radius:12px;overflow:visible;transition:opacity .5s var(--chg),transform .9s var(--chg)}
+.ch-chibi .fl{position:absolute;left:0;top:57px;width:311px;height:253px}
+.ch-chibi .ch{position:absolute;left:94px;top:30px;width:190px;height:260px;object-fit:cover}
+.ch-chibi .bt{position:absolute;left:-23px;width:75px;height:99px;cursor:none;transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+.ch-chibi .bt:hover{transform:translateX(8px)}
+.ch-chibi .b1{top:46px}.ch-chibi .b2{top:175px}
+.ch-chibi .bt span{display:block;width:75px;height:75px;background:#636363;position:relative}
+.ch-chibi .bt span img{position:absolute}
+.ch-chibi .bt i{display:block;height:23px;background:#ededed;color:#727272;font:400 24px/23px var(--font);text-align:center;font-style:normal}
+.ch-chibi .x1{left:24px;top:9px;width:27px;height:27px}.ch-chibi .x2{left:18.6px;top:31px;width:37.8px;height:41px}
+.ch-chibi .y1{left:25px;top:11px;width:24px;height:24px}.ch-chibi .y2{left:27.1px;top:27px;width:19.7px;height:33px}.ch-chibi .y3{left:6.5px;top:38.5px;width:62px;height:30px}   /* 数值 = 设计稿矢量框 × 它的 inset 外扩（432:3783 / 3790），之前直接用了框的原尺寸，图标被压扁 */
+.v-list .ch-chibi,.v-list .ch-acc{opacity:0;pointer-events:none;transform:translateX(60px)}
+
+/* 中栏：三个可折叠分组。能力概览 / 幸福理论按内容自适应高度（有多少写多少，没有滚动条）；「信息」默认收起、固定在最下面，
+   点开时自己占满剩下的高度，上面两个自动折叠；信息内容多了就翻页（‹ n / N ›），不滚动 */
+.ch-acc{left:594px;top:205px;width:732px;height:745px;display:flex;flex-direction:column}
+.sec{flex:none;margin-bottom:11px;display:flex;flex-direction:column;min-height:0}
+.sec.info{margin-top:auto;margin-bottom:0}
+.sec.info.on{flex:1 1 0;margin-top:0}
+.sec-h{position:relative;height:40px;background:#d3d3d3;font:700 26px/40px "Microsoft YaHei UI","Microsoft YaHei",sans-serif;padding-left:87px;cursor:none;flex:none;transition:background .25s,margin-bottom .6s var(--chg)}
+.sec-h:hover{background:#c6c6c6}
+.sec.on .sec-h{margin-bottom:11px}
+.sec-h u{position:absolute;left:34px;top:15px;width:14px;height:14px;border-left:4px solid #fff;border-top:4px solid #fff;transform:rotate(45deg);transform-origin:50% 50%;transition:transform .5s var(--chg),top .5s var(--chg)}
+.sec:not(.on) .sec-h u{transform:rotate(225deg);top:9px}
+.sec-b{position:relative;background:#ebebeb;display:grid;grid-template-rows:0fr;overflow:hidden;transition:grid-template-rows .6s var(--chg)}
+.sec.on .sec-b{grid-template-rows:1fr}
+.sec.info.on .sec-b{flex:1 1 0;min-height:0}
+.sec-b .in{min-height:0;overflow:hidden}
+.sec-b .in>.pd{padding:22px 18px 4px}
+.sec-b s{position:absolute;right:0;top:0;width:25px;height:25px;background:#636363;clip-path:polygon(0 0,100% 0,100% 100%);pointer-events:none}
+.ab{border-left:6px solid #111;padding:0 0 0 12px;margin-bottom:22px}
+.ab .tg{display:inline-block;height:24px;padding:0 8px;background:#636363;color:#fff;font:700 18px/24px "Microsoft YaHei",sans-serif}
+.ab .ds{margin-top:10px;background:#f6f6f6;padding:10px 14px;font:500 var(--fs,20px)/1.65 "Microsoft YaHei",sans-serif;color:#222;white-space:pre-line}
+.np{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start;break-inside:avoid}
+.np>i{flex:none;margin-top:5px;width:22px;height:19px;background:#636363;color:#fff;font:700 14px/19px Inter,sans-serif;text-align:center;font-style:normal}
+.np p{margin:0;font:500 var(--fs,20px)/1.65 "Microsoft YaHei",sans-serif;color:#222;white-space:pre-line}
+/* 信息：多栏分页 */
+.sec.info .in{position:relative}
+.sec.info .fl{position:absolute;left:18px;top:22px;right:18px;bottom:62px;column-gap:36px;column-fill:auto;transition:transform .7s var(--chg)}
+.ipg{position:absolute;right:18px;bottom:12px;display:flex;align-items:center;gap:12px;font:700 22px/1 Inter,sans-serif;color:#333}
+.ipg.one{display:none}
+.ipg b{width:38px;height:38px;border-radius:50%;border:3px solid #111;background:#fff;text-align:center;font:700 22px/32px Inter,sans-serif;cursor:none;transition:background .25s,opacity .25s}
+.ipg b:hover{background:#ffc822}
+.ipg[data-at=first] b:first-child,.ipg[data-at=last] b:last-child{opacity:.25;pointer-events:none}
+
+/* 半身立绘：叠在白板右下角，被白板边缘裁切 */
+.ch-port{left:1056px;top:185px;width:890px;height:895px;pointer-events:none}   /* 不再被白板裁切：剪影和半身像可以伸出白板右缘 / 底缘，只被整页边界裁切 */
+.ch-port .sil{position:absolute;left:422px;top:0;width:468px;height:807px;overflow:hidden;transform:scaleX(-1)}
+.ch-port .sil img{position:absolute;left:0;top:0;width:138.93%;height:100%}
+.ch-port .sg{position:absolute;left:53px;top:-35px;width:1059px;height:1068px;background:url(assets/chars/sil-grid.svg) 0 0/100% 100% no-repeat;-webkit-mask:url(assets/chars/sil-mask.png) 324px 35px/513px 807px no-repeat;mask:url(assets/chars/sil-mask.png) 324px 35px/513px 807px no-repeat}
+.ch-port .pt{position:absolute;left:0;top:137px;width:811px;height:772px;overflow:hidden}
+.ch-port .pt img{position:absolute;left:3.41%;top:-23.96%;width:100%;height:123.96%}
+
+/* 图缺失时留空 */
+.ch-port.nopt .sil,.ch-port.nopt .sg,.ch-port.nopt .pt{display:none}
+.ch-chibi.nopt .ch{visibility:hidden}
+
+/* 切视图：Q版、基本信息、中栏和头像栏一样——立刻向右淡出（快、不等白板），回来时等白板收窄后再淡入 */
+.ch-chibi,.ch-acc{transition:opacity .45s var(--chg) .4s,transform .6s var(--chg) .35s}
+.v-list .ch-chibi,.v-list .ch-acc{opacity:0;transform:translateX(46px);pointer-events:none;transition:opacity .32s cubic-bezier(.3,.6,.4,1),transform .4s cubic-bezier(.2,.7,.3,1)}
+
+/* ===== 按 Figma（432:3615）精确数值：字号 / 间距 / 颜色 ===== */
+/* 基本信息：18px Inter Bold，标签 #979797，值黑；每行文字顶对齐，分隔线在文字顶下 34.4px（行距 53.3），7 行只有 6 条线 */
+.ch-info .rows{top:72px}
+.ch-info .r{height:53.3px;position:relative;display:flex;align-items:flex-start;padding:0 0 0 10px;border-bottom:0;font:400 18px/normal Inter,"Microsoft YaHei",sans-serif}
+.ch-info .r::after{content:"";position:absolute;left:0;right:0;top:34.4px;height:1px;background:#b9b9b9}
+.ch-info .r:last-child::after{display:none}
+.ch-info .r i{width:72px;color:#979797}
+.ch-info .r b{font-weight:400;color:#000;line-height:normal;max-height:34px}
+/* 分组标题：#d9d9d9，24px Inter Bold 黑字（x=673），33×13 的矢量箭头（x=628）；展开朝上、收起朝下 */
+.sec-h{background:#d9d9d9;font:700 24px/43px Inter,"Microsoft YaHei",sans-serif;color:#000;padding-left:78px}
+.sec-h:hover{background:#cecece}
+.sec-h img{position:absolute;left:33px;top:10.5px;width:33px;height:14.5px;transition:transform .5s var(--chg)}
+.sec.on .sec-h img{transform:scaleY(-1)}
+.sec-b{background:linear-gradient(90deg,#e0e0e0,rgba(255,255,255,.64))}
+.sec-b .in>.pd{padding:24px 17px 34px 18.4px}
+/* 能力概览：竖条 #b9b9b9（6.4 宽），标签 #676767 + 20px Inter Bold 白字，说明框 rgba(49,49,49,.1)、18px Inter Regular 行高 1.234 */
+.ab{position:relative;border-left:0;padding:0 0 0 17.5px;margin:0 0 27px}
+.ab::before{content:"";position:absolute;left:-17.5px;top:0;bottom:0;width:6.445px;background:#b9b9b9}
+.ab{margin-left:17.5px}
+.ab .tg{height:24px;min-width:116px;padding:0 5.2px;background:#676767;color:#fff;font:700 20px/24px Inter,"Microsoft YaHei",sans-serif}
+.ab .ds{margin-top:12px;background:rgba(49,49,49,.1);padding:12px 16px 18px 16px;font:400 18px/1.234 Inter,"Microsoft YaHei",sans-serif;color:#000}
+/* 编号段：方块 21.9×19 #676767、数字 20px 玄黑体白；正文 18px Regular 行高 1.286；段距约 28 */
+.np{gap:15.3px;margin-bottom:28px}
+.np>i{width:21.889px;height:19px;margin-top:2px;background:#676767;color:#fff;font:400 20px/19px var(--font)}
+.np p{font:400 var(--fs,18px)/1.286 Inter,"Microsoft YaHei",sans-serif;color:#000}
+
+/* ===== 背景细节补全（Figma 432:3615 当前稿）===== */
+/* 地面：Rectangle 411 本身是可见的渐变（白 → #c8c8c8，竖向，33% 不透明），之前只拿它当线条的遮罩，漏了这层渐变 */
+.ch-floor0{left:0;top:217px;width:1920px;height:863px;background:url(assets/chars/floor-lines.svg) 0 0/100% 100% no-repeat;pointer-events:none}
+/* 右上纹饰（未标题-1 33）：现在只用一层遮罩，位置 -84.83px 0，尺寸 940.52×847.34 */
+.ch-deco.b{-webkit-mask:url(assets/chars/deco2-mask.svg) -84.83px 0/940.52px 847.336px no-repeat;mask:url(assets/chars/deco2-mask.svg) -84.83px 0/940.52px 847.336px no-repeat}
+/* Q版框：直接用稿里的「左下小人bg」整张图（带渐变阴影和透视线），按框的位置裁出来 */
+.ch-chibi{background:url(assets/chars/chibi-bg.png) -236px -640px/1920px 1080px no-repeat #d9d9d9}
+.ch-chibi .fl{display:none}
+
+/* ===== 全列表视图新稿（Figma 433:4991，2026-10-26）===== */
+/* 头像网格区：(78,194) 948×723 */
+.ch-grid{left:19px;top:17px;width:960px;height:723px}
+/* 底部栏（Figma 86:964）：切换图标（左下）……筛选条（右下）：灰色胶囊「全部 ^」+「分类」。点胶囊向上展开阵营列表，可多选 */
+.ch-pills{left:0;top:0;width:982px;height:822px;display:block;overflow:visible;gap:0;pointer-events:none}
+.v-list .ch-pills>*{pointer-events:auto}
+.ch-sortbar{position:absolute;left:599px;top:765px;width:350px;height:38px}
+.ch-sortbar .dd{position:absolute;left:0;top:0;width:288px;height:38px;box-sizing:border-box;border:5px solid #fff;border-radius:41px;background:#aeaeae;cursor:none;transition:background .25s}
+.ch-sortbar .dd:hover{background:#9a9a9a}
+.ch-sortbar .dd .v{position:absolute;left:45px;right:46px;top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:700 18px/28px Inter,"Microsoft YaHei",sans-serif;color:#fff}
+.ch-sortbar .dd img{position:absolute;left:232px;top:7.5px;width:23px;height:11px;transform:rotate(180deg);transition:transform .45s var(--chg)}   /* 素材是朝下的 v，平时翻成 ^，展开后转回 v */
+.ch-sortbar .dd.on img{transform:none}
+.ch-sortbar .lb{position:absolute;left:302px;top:5px;font:700 24px/28px Inter,"Microsoft YaHei",sans-serif;color:#000;pointer-events:none}
+/* 阵营列表：灰条正上方（间隔 9），288×378 白底圆角 20；首行「全部」20px + 右上「阵营」标题，横线，下面 8 项 18px、行距 37.5；方块 17px 灰 = 未选、黄 = 已选 */
+.ch-catpop{position:absolute;left:599px;top:378px;width:288px;height:378px;box-sizing:border-box;border-radius:20px;background:#fff;
+  opacity:0;transform:translateY(12px);pointer-events:none!important;transition:opacity .25s ease,transform .45s var(--chg)}
+.ch-catpop.on{opacity:1;transform:none;pointer-events:auto!important}
+.ch-catpop .hd{position:absolute;left:215px;top:17px;font:700 24px/29px Inter,"Microsoft YaHei",sans-serif;color:#000;pointer-events:none}
+.ch-catpop .ln{position:absolute;left:27px;top:56px;width:236px;height:2px;background:#d9d9d9}
+.ch-opt{position:absolute;left:14px;width:190px;height:34px;padding-left:52px;box-sizing:border-box;font:400 18px/34px Inter,"Microsoft YaHei",sans-serif;color:#000;white-space:nowrap;cursor:none;border-radius:8px;transition:background .25s}
+.ch-opt.all{font-size:20px}
+.ch-opt s{position:absolute;left:17px;top:8.5px;width:17px;height:17px;background:#d9d9d9;transition:transform .45s var(--chg),background .25s}
+.ch-opt:hover{background:rgba(0,0,0,.04)}
+.ch-opt:hover s{transform:rotate(45deg)}
+.ch-opt.sel{font-weight:700}
+.ch-opt.sel s{background:#ffc822}
+/* 右白板：名字块 (1649,185)；基本信息标题 x=1129 */
+.v-list .ch-name{left:1649px;top:185px}
+.ch-name{transition:left .9s var(--chg),top .9s var(--chg)}
+.v-list .ch-info{left:1129px}
+
+/* ===== 去掉所有 CSS mask：纹饰 / 地线 / 剪影格纹都预先烘成带透明的 PNG（assets/chars/bake-*.png）=====
+   file:// 打开或在 UE 的网页控件里时，浏览器会拦截 mask-image 引用的外部文件，带遮罩的图层会整块消失
+   （这就是之前「格纹 / 纹饰 / 渐变补了还是看不到」的原因），烘成 PNG 以后任何环境都能显示 */
+.ch-floor{background:url(assets/chars/bake-f.png) 0 0/1920px 1000px no-repeat;-webkit-mask:none;mask:none}
+.ch-deco.a{width:724px;height:724px;background:url(assets/chars/bake-a.png) 0 0/724px 724px no-repeat;-webkit-mask:none;mask:none}
+.ch-deco.a img{display:none}
+.ch-deco.b{width:941px;height:848px;background:url(assets/chars/bake-b.png) 0 0/941px 848px no-repeat;-webkit-mask:none;mask:none;overflow:visible}
+.ch-deco.b img{display:none}
+.ch-port .sg{background:url(assets/chars/bake-g.png) 0 0/1060px 1069px no-repeat;-webkit-mask:none;mask:none;width:1060px;height:1069px}
+
+/* ===== 名字块：固定在白板右侧、整体居右（右缘：详情 1550 / 列表 1842），不再超出白色底框 ===== */
+.ch-name{left:1320px;top:200px;width:300px;display:flex;justify-content:flex-end}
+.v-list .ch-name{left:1542px;top:185px}
+.ch-name .in{display:flex;flex-direction:column;align-items:center}
+.ch-name .nm{justify-content:flex-end}
+.ch-name .sb{margin:-4px 0 0 0}
+/* 悬停头像：引线标注（同任务页雕像的「· —— 名字」）。从头像右边斜着拉出一根 2px 黑线，拐成横线，末端一个 8px 方块，后面是名字 + <体系>；
+   没有底板。斜向下拉出，避开换装页左上角的大名字。顺序：线 → 点 → 字；收起时一起快速淡出；换头像时整组上下滑过去 */
+.ch-tip{left:142px;top:296px;width:300px;height:80px;pointer-events:none;z-index:8;opacity:0;transition:opacity .12s ease-in}
+.ch-tip.on{opacity:1;transition:opacity .08s}
+/* 线一直画到方块中心（x=72, y=34），被方块压住；入场的生长动画在 chars.js 里（每次换头像重播） */
+.ch-tip svg{position:absolute;left:0;top:0;overflow:visible}
+.ch-tip path{fill:none;stroke:#9a9a9a;stroke-width:2;stroke-dasharray:90;stroke-dashoffset:0}
+.ch-tip s{position:absolute;left:67px;top:29px;width:10px;height:10px;background:#9a9a9a}
+.ch-tip.cur s{background:#ffc822;outline:2px solid #9a9a9a}
+.ch-tip b{position:absolute;left:90px;top:19px;font:700 24px/30px Inter,"Microsoft YaHei UI","Microsoft YaHei",sans-serif;color:#000;white-space:nowrap}
+.ch-tip i{position:absolute;left:91px;top:49px;font:400 15px/18px "Microsoft YaHei UI","Microsoft YaHei",sans-serif;font-style:normal;color:#424242;letter-spacing:1px;white-space:nowrap}
+.v-list .ch-tip{display:none}
+.ch-fade{left:184px;top:175px;width:399px;height:822px;border-radius:30px;background:linear-gradient(90.05deg,rgba(255,255,255,.8) 4.3267%,rgba(255,255,255,.624) 40.565%,rgba(255,255,255,0) 110.47%);opacity:0;pointer-events:none;transition:opacity .3s;z-index:2}
+.tipping .ch-fade{opacity:1}
+/* 白板底色：稿里右白板和头像栏是 80% 白 */
+.ch-right,.ch-main{background:rgba(255,255,255,.8)}
+
+.ch-tip .avc{position:absolute;left:1px;top:1px;width:63px;height:63px;border-radius:50%;border:3px solid #111;overflow:hidden;background:#d9d9d9}
+.ch-tip .avc img{width:100%;height:100%;object-fit:cover;display:block}
+
+
+/* ===== 头像栏静态样式按 Figma（432:3732 / 452:3422）：底色 80% 白；每个头像 = 羽化外圈 + 黑色内圈 + 头像；选中 = 黑环 + 黄色羽化光晕（微旋转）===== */
+.ch-main{border-radius:78px}
+.v-list .ch-main{border-radius:39px}
+.ch-rail{top:15px}
+.ch-av .ai{position:relative;width:63px;height:63px;transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+.ch-av:hover .ai{transform:scale(1.1)}
+.ai img{position:absolute;max-width:none;pointer-events:none}
+.ai .f1{left:-6px;top:-6px;width:75px;height:75px}
+.ai .f2{left:-1px;top:-1px;width:65px;height:65px}
+.ai .s1{left:-1px;top:-1px;width:65px;height:65px;display:none}
+.ai .s2{left:-12.5px;top:-12.5px;width:88px;height:88px;display:none;transform:rotate(.85deg)}
+.ch-av.sel .ai .f1,.ch-av.sel .ai .f2{display:none}
+.ch-av.sel .ai .s1,.ch-av.sel .ai .s2{display:block}
+.ai .c{position:absolute;left:0;top:0;width:63px;height:63px;border:0;border-radius:50%;overflow:hidden;background:none;box-shadow:none;transform:none!important}
+.ai .c img{position:static;width:100%;height:100%;object-fit:cover;display:block}
+.ch-av.sel .c{width:63px;height:63px;border:0;box-shadow:none}
+.ch-fade{transition:opacity .35s ease}
+.ch-av{position:relative}
+.ch-av.up{z-index:9}
+
+
+.np>p,.np>div{flex:1 1 auto;min-width:0}   /* 长段落按面板宽度换行，不再一行冲出去 */
+
+/* 左白板切换时圆角平滑过渡：详情里 91 宽的胶囊用 45.5（正好半宽，视觉同稿里的 78），列表里 39。
+   之前用 78：窄的时候被浏览器压成 45.5，一展开就真的变成 78、再跳到 39，看起来会突然变大一下 */
+.ch-main{border-radius:45.5px;transition:width .9s var(--chg),border-radius .9s var(--chg)}
+.v-list .ch-main{border-radius:39px}
+
+/* ===== 换装（Figma 433:5395）：方案三 镜头沿地面推进 ===== */
+/* 骨骼小人：固定在换装位置 (419,434) 314×430，联系簿里用 transform 缩回小窗（脚底为锚点） */
+.ch-chibi .ch{display:none}
+/* 小人 = 贴花：.ch-sk 在联系簿小窗里，.ch-sk2 在换装位置 (396,337) 424×581；不移动不旋转，只跟着各自的页面淡入淡出 */
+.ch-sk,.ch-sk2{left:396px;top:337px;width:424px;height:581px;pointer-events:none;transform-origin:50% 100%}
+.ch-sk{transform:translate(-183px,12px) scale(.4478);transition:opacity .5s ease .55s}
+.ch-sk img,.ch-sk2 img{width:100%;height:100%;object-fit:contain;display:block}
+.v-list .ch-sk{opacity:0}
+.dressing .ch-sk{opacity:0;transition:opacity .3s ease}
+.ch-sk2{left:349px;top:328px;opacity:0;transition:opacity .25s ease}   /* 换装页大小人 (349,337) 424×581（Figma 603:362 改版） */
+.dressing .ch-sk2{opacity:1;transition:opacity .5s ease .3s}
+/* 地面（背景）换装时不动，镜头不拉近 */
+/* 右侧内容：原地淡出；回来时等小人回到小窗再出现 */
+.ch-right,.ch-info,.ch-acc,.ch-port,.ch-name,.ch-chibi,.ch-fade{transform-origin:254px 80px}
+.ch-right{transition:left .9s var(--chg),width .9s var(--chg),border-radius .9s var(--chg),opacity .5s ease .55s,transform .7s var(--chg) .55s}
+.ch-info{transition:left .9s var(--chg),opacity .5s ease .6s,transform .7s var(--chg) .6s}
+.ch-name{transition:left .9s var(--chg),top .9s var(--chg),opacity .5s ease .6s,transform .7s var(--chg) .6s}
+.ch-port{transition:opacity .5s ease .55s,transform .7s var(--chg) .55s}
+.ch-tab1{transition:opacity .35s ease .4s}
+.dressing .ch-right,.dressing .ch-info,.dressing .ch-name,.dressing .ch-port,.dressing .ch-acc,.dressing .ch-chibi,.dressing .ch-fade{
+  opacity:0;pointer-events:none;
+  transition:left .9s var(--chg),width .9s var(--chg),top .9s var(--chg),opacity .35s ease,transform .6s cubic-bezier(.4,0,.6,1)}
+.dressing .ch-tab1{opacity:0;pointer-events:none;transition:opacity .25s}
+/* 换装页顶栏：联系簿 | 图标 | 换装 */
+.ch-t3{left:0;top:0;width:0;height:0;opacity:0;pointer-events:none;transition:opacity .25s}
+.dressing .ch-t3{opacity:1;pointer-events:auto;transition:opacity .35s ease .35s}
+.ch-t3>*{position:absolute}
+.ch-t3 .wb{left:1403px;top:39px;width:399px;height:55px;background:#fff;border-radius:10px}
+.ch-t3 .fd{left:1423px;top:46px;width:42px;height:42px}
+.ch-t3 .tx{font:700 36px/45px "Microsoft YaHei UI","Microsoft YaHei",sans-serif;letter-spacing:1.8px;transform:rotate(-.38deg);white-space:nowrap}
+.ch-t3 .tx.a{left:1477px;top:43px;cursor:none}.ch-t3 .tx.b{left:1709px;top:43px}
+.ch-t3 .ln{left:1628px;top:48px;width:4px;height:40px;background:#000}
+.ch-t3 .cv{left:1662px;top:50px;width:24px;height:34px}
+/* 换装页左边白卡 (175,191) 689×794 + 两块灰底（后面一块转了 4.5°），小人站在上面（Figma 583:2399） */
+.ch-dc{left:175px;top:191px;width:689px;height:794px;background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 6px 24px rgba(0,0,0,.18);pointer-events:none;opacity:0;transform:translateX(-90px);transition:opacity .2s ease,transform .25s cubic-bezier(.4,0,.8,.6)}
+.dressing .ch-dc{opacity:1;transform:none;transition:opacity .45s ease .3s,transform .7s cubic-bezier(.2,.8,.2,1) .3s}
+.ch-dc i{position:absolute;border-radius:10px}
+.ch-dc .r1{left:50.55px;top:150.55px;width:565.87px;height:565.87px;background:#999;transform:rotate(-4.548deg)}
+.ch-dc .r2{left:68px;top:143px;width:583px;height:583px;background:#c5c5c5}
+/* ===== 衣橱面板（Figma 603:362 套装 / 602:362 按部位）=====
+   面板 (893,200) 931×794：白 82% + 模糊 + 圆角 31（同店铺 / 联系簿）；内容从面板左 74 开始 */
+.ch-dr{left:0;top:0;width:0;height:0;pointer-events:none}
+.ch-dr .pn{position:absolute;left:893px;top:191px;width:931px;height:794px;background:rgba(255,255,255,.8);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 6px 24px rgba(0,0,0,.18);
+  opacity:0;transform:translateX(90px);transition:opacity .2s ease,transform .25s cubic-bezier(.4,0,.8,.6)}
+.dressing .ch-dr{pointer-events:auto}
+/* 联系簿内容淡出后（.3s）从右边滑进来，和大小人同时出现 */
+.dressing .ch-dr .pn{opacity:1;transform:none;transition:opacity .45s ease .3s,transform .7s cubic-bezier(.2,.8,.2,1) .3s}
+.ch-dr .pn>*{position:absolute}
+/* 2026-11-13 Figma「更新部分」（455:266 单件 / 459:335 套装）：坐标都是面板内坐标 = 稿里坐标 - 面板 (893,200) */
+.ch-dr{--hc:"寒蝉有机体",var(--font);--ns:"Noto Sans SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif}
+.ch-dr .tt{left:74px;top:52px;font:900 48px/58px var(--ns);white-space:nowrap}
+.ch-dr .dv{left:74px;top:174px;width:780px;height:1.5px;background:rgba(0,0,0,.15)}
+.ch-dr .ct{display:none;left:209px;top:52px;font:400 18px/22px var(--ns);color:#424242;letter-spacing:1px;white-space:nowrap}
+/* 「更换装扮」（= 原「完成」）：底图 116×38，字 寒蝉 24 / 字距 3.36 */
+.ch-dr .ok{left:737px;top:70px;width:116px;height:38px;background:url(assets/chars/wd-btn-bg.png) 0 0/100% 100% no-repeat;cursor:none;transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+.ch-dr .ok b{position:absolute;left:12px;top:0;font:500 24px/35px var(--hc);letter-spacing:3.36px;color:#000;white-space:nowrap}
+.ch-dr .ok:hover,.ch-dr .sw:hover{transform:scale(1.07)}
+/* 切换按钮：同一张按钮底图切成左 35 + 右 20.3 两段，中间一个切换图标 */
+.ch-dr .sw{left:667px;top:70px;width:55.3px;height:38px;cursor:none;transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+.ch-dr .sw s{position:absolute;top:0;height:37.72px;background:url(assets/chars/wd-btn-sprite.png) no-repeat;background-size:113.73px 37.72px}
+.ch-dr .sw .l{left:0;width:35px;background-position:0 0}
+.ch-dr .sw .r{left:35px;width:20.31px;background-position:-93.42px 0}
+.ch-dr .sw img{position:absolute;left:10px;top:6px;width:35px;height:25px}
+/* 分类：灰底纸条 782×34，方块 13 + 名字 20（选中：黄方块 16 + 黑字 24） */
+.ch-dr .tabs{left:74px;top:121px;width:782px;height:34px;box-sizing:border-box;padding-left:31px;background:url(assets/chars/wd-tabs-bg.png) 0 0/100% 100% no-repeat;display:flex;align-items:center;gap:32px;white-space:nowrap}
+.ch-dr .tb{display:flex;align-items:center;gap:8px;font:700 20px/24px var(--ns);color:#424242;cursor:none;transition:color .25s,transform .35s cubic-bezier(.3,1.5,.5,1)}
+.ch-dr .tb::before{content:'';width:13px;height:13px;background:#424242;transition:background .25s,width .25s,height .25s}
+.ch-dr .tb:hover{transform:scale(1.07)}
+.ch-dr .tb.sel{font-size:24px;line-height:29px;color:#000}
+.ch-dr .tb.sel::before{width:16px;height:16px;background:#ffc822}
+/* 列表区：撕纸边蒙版 869×550（稿 921,379），里面上下滚动，不显示滚动条 */
+.ch-dr .bd{left:28px;top:188px;width:869px;height:550px;overflow-x:hidden;overflow-y:auto;scrollbar-width:none;
+  -webkit-mask:var(--wd-mask) 0 0/869px 550px no-repeat;mask:var(--wd-mask) 0 0/869px 550px no-repeat}
+/* 撕纸蒙版直接内嵌（assets/chars/wd-mask-small.png）：直接双击 index.html（file://）打开时，浏览器不让 CSS 蒙版读本地图片，
+   列表会整个被遮掉、一张卡都看不到；内嵌成 data URI 就没有这个限制 */
+.ch-dr{--wd-mask:url("data:image/png;base64,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")}
+.ch-dr .bd::-webkit-scrollbar{display:none}
+.ch-dr .bd>div{position:absolute;cursor:none;transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+.ch-dr .bd>div:hover{transform:scale(1.04)}
+.ch-dr .bd>.end{position:absolute;left:0;width:1px;height:1px}
+.ch-dr .bd .none{position:static;padding-top:180px;text-align:center;font:400 20px/1 var(--ns);color:#999;cursor:auto}
+.ch-dr .bd .none:hover{transform:none}
+/* 选中：纸片后面右下偏移的黄面（稿：右 8 下 6） */
+.ch-dr .yf{position:absolute;left:0;top:0;background:#ffc822;opacity:0;transition:opacity .2s,transform .35s cubic-bezier(.3,1.5,.5,1)}
+.ch-dr .sel .yf{opacity:1;transform:translate(8px,6px)}
+/* 穿戴中：黑色撕纸标签 93.8×45.3，白字 寒蝉 20 / 字距 4，转 -4.77° */
+.ch-dr em{position:absolute;width:93.76px;height:45.31px;background:url(assets/chars/wd-tag.png) 0 0/100% 100% no-repeat;display:flex;align-items:center;justify-content:center;font-style:normal;z-index:1}
+.ch-dr em i{font:400 20px/normal var(--hc);letter-spacing:4px;color:#fff;font-style:normal;white-space:nowrap;transform:rotate(-4.77deg);margin-left:4px}
+/* 套装卡 380×176：两列（间距 432），撕纸底 + 投影 */
+.ch-dr .sc{width:380px;height:176px}
+.ch-dr .sc .yf,.ch-dr .sc .bg{width:380px;height:176px}
+.ch-dr .sc .bg{position:absolute;left:0;top:0;background:url(assets/chars/wd-set-paper.png) 0 0/100% 100% no-repeat;filter:drop-shadow(2px 4px 0 rgba(0,0,0,.25))}
+.ch-dr .sc .th{position:absolute;left:16px;top:28px;width:120px;height:120px;background:#fff}
+.ch-dr .sc em{left:-12px;top:-10px}
+.ch-dr .sc b{position:absolute;left:152px;top:28px;font:500 22px/normal var(--hc);letter-spacing:2.2px;white-space:nowrap}
+.ch-dr .sc .ln{position:absolute;left:152px;top:65px;width:207px;height:2px}
+.ch-dr .sc u{position:absolute;left:327px;top:35px;text-decoration:none;font:700 16px/normal var(--ns);color:#424242}
+.ch-dr .sc u.full{color:#000}
+.ch-dr .sc .ps{position:absolute;left:152px;top:86px;display:flex;gap:12px}
+.ch-dr .sc .ps span{width:40px;display:flex;flex-direction:column;align-items:center;gap:6px;font:400 12px/normal var(--ns);color:#424242}
+.ch-dr .sc .ps i{width:40px;height:40px;box-sizing:border-box;border:2px dashed #999;background:rgba(255,255,255,.4)}
+.ch-dr .sc .ps .o i{border:0;background:#4a4a4a}
+/* 单件格子：撕纸底 180×157 + 128 的图位 + 名字（寒蝉 20，居中），四列（间距 207） */
+.ch-dr .it{width:180px;height:186px}
+.ch-dr .it .yf,.ch-dr .it .bx{width:180px;height:157px}
+.ch-dr .it .bx{position:absolute;left:0;top:0;background:url(assets/chars/wd-item-paper.png) 0 0/100% 100% no-repeat;filter:drop-shadow(2px 4px 0 rgba(0,0,0,.25))}
+.ch-dr .it .ph{position:absolute;left:27px;top:15px;width:128px;height:128px;background:#d9d9d9}
+.ch-dr .it em{left:-18px;top:-16px}
+.ch-dr .it b{position:absolute;left:0;top:163px;width:180px;text-align:center;font:500 20px/normal var(--hc);white-space:nowrap}
+.ch-dr .it q{position:absolute;left:162px;top:8px;width:8px;height:8px;background:#ffc822;quotes:none}
+/* 不再翻页（整张列表在蒙版里滚动） */
+.ch-dr .pgr{display:none}
+/* 换装页左上角：角色名 + <体系> */
+.ch-dn{left:0;top:0;width:0;height:0;white-space:nowrap;pointer-events:none;opacity:0;transform:translateX(-40px);transition:opacity .25s,transform .3s}
+.ch-dn b,.ch-dn i{position:absolute;transform:rotate(-.376deg);transform-origin:0 0}
+.ch-dn b{left:204px;top:199px;font:400 96px/normal var(--font);letter-spacing:-.07em;color:#000;-webkit-text-stroke:18px #ebe0cb;paint-order:stroke fill}
+.ch-dn i{left:198px;top:297px;font:700 24px/normal Inter,"Microsoft YaHei UI","Microsoft YaHei",sans-serif;font-style:normal;color:#5e5e5e}
+.dressing .ch-dn{opacity:1;transform:none;transition:opacity .45s ease .3s,transform .7s cubic-bezier(.2,.8,.2,1) .3s}
+
+/* ===== 联系簿中部三组（Figma 461:2 / 462:290 / 468:2）===== */
+/* 标题条：#4a4a4a，24px Inter Bold 白字，白色箭头（展开朝上、收起朝下） */
+.sec-h{background:#4a4a4a;color:#fff}
+.sec-h:hover{background:#5c5c5c}
+/* 三组可以同时展开：能力 / 幸福按内容高度（放不下时一起压缩），信息占剩下的高度；组内放不下就上下滚动 */
+.sec.ability,.sec.happy{flex:0 1 auto}
+/* 组内不再滚动：三组一起放在 .ch-acc 这一个滚动框里（见文件末尾） */
+.sec:not(.on) .sec-b .in{overflow:hidden}
+.sec.ability.on .sec-b,.sec.happy.on .sec-b{min-height:0}
+.sec.info{min-height:40px}
+.sec.info.on{min-height:177px}   /* 信息展开时至少留标题 + 126 高的正文（Figma 462:290），上面两组放不下就各自压缩、组内滚动 */
+/* 能力：黑竖条 6.4 宽贯穿整块；「能力：xxx」标签；图标 51×51（左 13）在说明框左边居中，说明框从标签右移 85 开始 */
+.ab::before{background:#000}
+.ab .row{display:flex;align-items:center;margin-top:18px;height:auto;padding:0;gap:0;transform:none}   /* 重置 style.css 全局 .row（主菜单用的 128 高 + 斜切） */   /* 稿里标签底 442 → 说明框 460 */
+.ab .ds{margin-top:0;flex:1;min-height:45px;padding:11px 16px;white-space:pre-line}
+.ab{padding-left:0}   /* 标签和竖条间距 17.6（由 margin-left 给出），标签不再额外缩进 */
+.ab.ic .lg{flex:none;position:relative;width:76.6px;height:76.6px;margin:0 8.4px 0 0;background:url(assets/chars/ability-logo.svg) 0 0/100% 100% no-repeat}   /* 白色柔光 76.6（含模糊余量）从标签左边开始，说明框在标签右移 85 处 */
+.ab.ic .lg img{position:absolute;left:8.8px;top:5.8px;width:66px;height:65px}
+.ab.ic .lg.w img{left:6.8px;width:68px}
+/* 幸福理论：编号方块 20×20 #676767；锁住的条目方块里放锁，后面一个手绘感的白底黑框标题（没解锁显示 ？？？） */
+.np>i{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font:400 20px/20px var(--font)}
+.np.lk>i img{width:16.7px;height:16.7px}
+.np .bx{display:inline-block;padding:0 5px;border:2px solid #000;border-radius:2px;background:#fff;font:700 20px/24px Inter,"Microsoft YaHei",sans-serif;box-shadow:1px 1px 0 #000}
+/* 信息：每段一个 #676767 白字标签，正文 18px，竖着排 */
+.sec.info .in{position:static}
+.ib{margin-bottom:22px}
+.ib:last-child{margin-bottom:0}
+.ib .tg{display:inline-block;height:24px;padding:0 9px;background:#676767;color:#fff;font:700 20px/24px Inter,"Microsoft YaHei",sans-serif}
+.ib p{margin-top:12px;font:400 18px/1.286 Inter,"Microsoft YaHei",sans-serif;color:#000;white-space:pre-line}
+/* 右上角大黑三角（1733,209 95×88）；全列表 / 换装时隐藏 */
+.ch-tri{left:1733px;top:209px;width:95px;height:88px;background:#000;clip-path:polygon(0 0,100% 0,100% 100%);pointer-events:none;transition:opacity .45s var(--chg) .4s}
+.v-list .ch-tri,.dressing .ch-tri{opacity:0;transition:opacity .3s}
+.np p .tx{display:block;margin-top:6px;white-space:pre-line}   /* 小标题下面是正文 */
+.np p .bx:only-child{margin-bottom:0}
+
+/* 2026-11-21 联系簿中部三组 = 一个整体滚动框：三组默认全展开、上下紧挨着按内容高度排，整列一起滚（不再各组内部滚动，信息也不再沉到底） */
+.ch-acc{display:block;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.ch-acc .sec,.ch-acc .sec.info,.ch-acc .sec.info.on{flex:none;margin:0 0 11px;min-height:0}
+.ch-acc .sec:last-child{margin-bottom:0}
+.ch-acc .sec.info.on .sec-b{flex:none}
+.ch-acc .sec-b .in{overflow:visible;max-height:none;height:auto}   /* 组内没有滚动框，收起时由 .sec-b 裁掉 */
+.ch-acc::-webkit-scrollbar{width:4px}
+.ch-acc::-webkit-scrollbar-button{display:none;height:0}
+.ch-acc::-webkit-scrollbar-track{background:transparent}
+.ch-acc::-webkit-scrollbar-thumb{background:transparent;border-radius:2px}
+.ch-acc:hover::-webkit-scrollbar-thumb{background:rgba(0,0,0,.28)}
+@supports not selector(::-webkit-scrollbar){.ch-acc{scrollbar-width:thin;scrollbar-color:transparent transparent}.ch-acc:hover{scrollbar-color:rgba(0,0,0,.28) transparent}}
+/* 从衣架直接进换装页：这一下不走 CSS 过渡（入场改由 enter() 里的动画统一控制） */
+.chars.instant,.chars.instant *{transition:none!important}

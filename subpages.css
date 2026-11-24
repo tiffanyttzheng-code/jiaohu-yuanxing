@@ -1,0 +1,96 @@
+/* 图鉴内部（万象站 + 作品百科）样式。数值来自 Figma 节点 351:12374 / 359:12605。
+   所有「大平移」（雕像、轮播、标签、详情放大）统一用 --glide 缓动曲线（定义在 style.css 的 :root）。 */
+.page.sub{background:#f6f6f6}
+.atlas .a{position:absolute}
+.atlas .a>img{display:block;max-width:none;width:100%;height:100%;object-fit:cover}
+.atlas img.crop{position:absolute;max-width:none}
+.atlas .np{pointer-events:none}
+
+/* 文字规格 */
+.atlas .tab{font:700 48px/59.235px Inter,"Microsoft YaHei",sans-serif;color:#000;white-space:nowrap;text-align:left}  /* Figma：文字框固定宽度、靠左对齐、高 59.235 */
+.atlas .cardname{font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;font-weight:700;color:#fff;white-space:nowrap;text-align:center;line-height:normal}
+.atlas .cardname.r{text-align:right}
+.atlas .tbg{width:100%;height:100%;background:#b2b2b2;border-radius:39px;filter:blur(6.95px)}
+.atlas .big,.atlas .lgray{font-family:var(--font);white-space:nowrap;line-height:normal;text-align:right;font-weight:400}
+.atlas .big{color:#000}
+.atlas .lgray{color:rgba(0,0,0,.34)}
+.atlas .swtch{cursor:none}
+
+/* 地板线：每帧由 atlas.js 按摄像机重新投影；入场时线从远处向近处「画」出来 */
+@property --tx{syntax:'<length>';inherits:false;initial-value:0px}
+@property --ty{syntax:'<length>';inherits:false;initial-value:0px}
+@property --sc{syntax:'<number>';inherits:false;initial-value:1}
+.atlas .floor{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.atlas .ln{stroke-dasharray:1 1;stroke-dashoffset:1;transition:stroke-dashoffset 1s cubic-bezier(.3,.6,.2,1) var(--d,0s)}
+.atlas:not(.pre) .ln{stroke-dashoffset:0}
+
+/* 两个场景各自的界面物件（卡片、标签）：离开的先淡出，进入的晚 0.3s 起并错峰。
+   位移走弧线：横向用 --glide，纵向用另一条曲线，两个方向的快慢错开，路径就是弧线 */
+.atlas .sc,.atlas .stat,.atlas .lab,.atlas .wc{position:absolute;left:0;top:0;width:0;height:0}
+.atlas .sxi,.atlas .swi{--ox:0px;--oy:0px;--os:1;transform:translate(var(--tx),var(--ty)) scale(var(--sc));
+  transition:--tx .95s var(--glide) var(--dl,0s),--ty .95s cubic-bezier(.2,0,.05,1) var(--dl,0s),--sc .95s var(--glide) var(--dl,0s),opacity .4s ease var(--dl,0s)}
+.atlas[data-scene=xiang] .swi,.atlas[data-scene=wiki] .sxi,.atlas.pre .sxi,.atlas.pre .swi{--tx:var(--ox);--ty:var(--oy);--sc:var(--os);opacity:0;pointer-events:none;--dl:0s}
+.atlas[data-scene=xiang] .sxi,.atlas[data-scene=wiki] .swi{--dl:calc(.3s + var(--i,0) * .07s)}
+.atlas.pre *{transition:none !important}
+
+/* 万象站：轮播卡片，选中卡放大，位置和尺寸的变化同样走 --glide */
+.atlas .xc{position:absolute;transition:--tx .95s var(--glide) var(--dl,0s),--ty .95s cubic-bezier(.2,0,.05,1) var(--dl,0s),--sc .95s var(--glide) var(--dl,0s),opacity .4s ease var(--dl,0s),left .6s var(--glide),top .6s var(--glide),width .6s var(--glide),height .6s var(--glide)}
+.atlas .xc .n,.atlas .xc .s{position:absolute;inset:0;transition:opacity .3s ease,transform .25s cubic-bezier(.3,1.8,.5,1),filter .2s}
+.atlas .xc .s{opacity:0}
+.atlas .xc.sel .s{opacity:1}
+.atlas .xc.sel .n{opacity:0}
+.atlas .xc .g{position:absolute;inset:0;background:linear-gradient(to bottom,#fff,rgba(255,255,255,0))}
+.atlas .xc .b1{position:absolute;left:3.92%;top:3.47%;width:92.94%;height:92.74%;background:#d9d9d9;border-radius:6px}
+.atlas .xc .im{position:absolute;left:9.02%;top:10.09%;width:83.14%;height:70.35%}
+.atlas .xc .nm,.atlas .xc .tn{position:absolute;left:0;right:0;text-align:center;font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;font-weight:700;color:#fff;line-height:normal;white-space:nowrap}
+.atlas .xc .nm{top:83.2%;font-size:24px;letter-spacing:1.68px}
+.atlas .xc .sb{position:absolute;inset:0;width:100%;height:100%}
+.atlas .xc .tp{position:absolute;left:6.65%;top:82.85%;width:89.24%;height:11.45%;background:#b2b2b2;border-radius:39px;filter:blur(6.95px)}
+.atlas .xc .sb1{position:absolute;left:2.75%;top:3.1%;width:94.5%;height:74.78%}
+.atlas .xc .si{position:absolute;left:7.34%;top:7.97%;width:85.32%;height:65.04%}
+.atlas .xc .tn{top:83.77%;font-size:28.8px;letter-spacing:2.016px}
+/* 悬停：只抬起，加一层很淡的投影；不加黑色描边 */
+.atlas .xc.hot:not(.sel) .n{transform:translateY(-14px);filter:drop-shadow(0 12px 14px rgba(0,0,0,.2))}
+.atlas .xc.sel.hot .s{transform:translateY(-8px)}
+
+/* 作品百科：透视卡片；入场时从消失点方向沿弧线过来 */
+.atlas .wc{transform-origin:var(--cx) var(--cy);--os:.7}
+.atlas .wl{position:absolute;left:0;top:0;width:0;height:0;transition:transform .25s cubic-bezier(.3,1.8,.5,1)}
+.atlas .sc{z-index:0}.atlas .stat{z-index:1}   /* 雕像图层永远在卡片前面 */
+.atlas .stat,.atlas .stat *{pointer-events:none}   /* 雕像只是画面，不挡住后面卡片的点击 */
+.atlas .wp{position:absolute;left:0;top:0}  /* 卡片三个部件（图、名牌、名字）的位置/旋转由 atlas.js 每帧按卡位插值设置 */
+.atlas .wn{transform-origin:100% 50%}
+.atlas .wc.hot .wl{transform:translateY(-16px)}
+.atlas .wc.hot .wi{filter:drop-shadow(0 12px 14px rgba(0,0,0,.22))}
+
+/* 雕像：钉在地面上，位置和大小由 atlas.js 每帧按摄像机投影设置（大小遵循透视规律）。外框取「大」姿态的尺寸 */
+.atlas .sta{position:absolute;left:0;top:0;transform-origin:0 0}
+.atlas .sta .stbody{display:block;width:100%;height:100%;object-fit:cover}
+.atlas .plate{position:absolute;background:#bbb;border:7px solid rgba(0,0,0,.31)}
+/* 环带：atlas.js 每帧画进 SVG（前半圈在雕像前，后半圈在雕像后），透明度跟大雕像走 */
+.atlas .ring{position:absolute;left:0;top:0;pointer-events:none}
+
+/* 顶部栏：作品百科页整体下移 7px */
+.atlas .barw{transition:transform .8s var(--glide)}
+.atlas[data-scene=wiki] .sc-x,.atlas[data-scene=xiang] .sc-w{display:none!important}   /* 两页的右侧标签各一套 */
+.atlas .closer img{transition:transform .3s var(--glide)}
+.atlas .closer:hover img{transform:rotate(90deg)}
+
+/* 详情占位 */
+.atlas .det{position:absolute;inset:0;display:none}
+.atlas .det.on{display:block}
+.atlas .det .dim{position:absolute;inset:0;background:rgba(246,246,246,.78)}
+.atlas .det .dc{position:absolute;left:360px;top:150px;width:1200px;height:780px;background:#fff;border:8px solid #000;border-radius:27px;transform-origin:0 0;overflow:hidden}
+.atlas .det .dimg{position:absolute;left:48px;top:48px;width:560px;height:560px;background:#d9d9d9;border-radius:6px;overflow:hidden}
+.atlas .det .dimg img{width:100%;height:100%;object-fit:cover;display:block}
+.atlas .det .dn{position:absolute;left:660px;top:70px;font:400 96px/normal var(--font);color:#000;white-space:nowrap}
+.atlas .det .dsub{position:absolute;left:664px;top:210px;font:700 36px/normal "Microsoft YaHei",sans-serif;color:#8a8a8a}
+.atlas .det .dhint{position:absolute;right:44px;bottom:30px;font:700 28px/normal "Microsoft YaHei",sans-serif;color:#a3a3a3}
+
+.atlas .tbmenu{position:absolute;left:1560px;top:98px;width:247px;border-radius:10px;background:#fff;box-shadow:0 12px 22px rgba(0,0,0,.25);padding:6px;display:none;z-index:8}
+.atlas .tbmenu.on{display:block}
+.atlas .tbmenu .swtch{height:50px;line-height:50px;padding:0 20px;border-radius:8px;font:700 30px/50px "Microsoft YaHei",sans-serif;position:static!important}
+.atlas .tbmenu .swtch:hover{background:#ffc822}
+.atlas .tbtab,.atlas .back2{cursor:none}
+.atlas .barw{z-index:20}   /* 顶栏永远压在雕像 / 卡片上面（新稿里搜索框盖在雕像上） */
+

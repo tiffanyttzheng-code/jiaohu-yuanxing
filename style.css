@@ -1,0 +1,226 @@
+@font-face{font-family:"SSXuanhei";src:url("fonts/xuanhei.ttf") format("truetype");font-weight:100 900;font-style:normal;font-display:block}
+:root{
+  --ink:#0b0b0b; --paper:#dfdfdf; --yellow:#ffc822; --cy:#00e5ff; --mg:#ff2e88;
+  --iso:-26deg;
+  /* 大平移统一用的缓动曲线（三次贝塞尔）：起步慢 → 中段加速 → 最后缓缓停住。JS 里的 GLIDE 与它相同 */
+  --glide:cubic-bezier(.7,0,.2,1);
+  --font:"SSXuanhei","128-上首玄黑体","Noto Sans SC","Microsoft YaHei UI","Microsoft YaHei","SimHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#101010}
+body{font-family:var(--font);-webkit-font-smoothing:antialiased}
+#viewport{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;margin:-540px 0 0 -960px;width:1920px;height:1080px;background:var(--paper);overflow:hidden;
+  transform:scale(var(--s,1));transform-origin:center;cursor:none;user-select:none;-webkit-user-select:none}
+#stage:not(.ready){visibility:hidden}   /* 脚本跑完、缩放好之前不显示画布，避免刷新时先闪出一块没缩放的灰底 */
+
+#room{position:absolute;inset:0;--mx:0;--my:0}
+.it{position:absolute;width:0;height:0;
+  translate:calc(var(--mx) * var(--d,0) * 1px) calc(var(--my) * var(--d,0) * 1px)}
+.fx{position:absolute;left:0;top:0;width:0;height:0;
+  transition:transform .35s cubic-bezier(.3,1.9,.5,1),filter .2s;transform-origin:0 0}
+.sk{position:absolute;left:0;top:0;white-space:nowrap;line-height:normal;transform-origin:50% 50%}
+.sk img{display:block;width:100%;height:100%;pointer-events:none}
+.plain .sk{transform:none}
+/* 主页图层（assets/home3/）：一块入口里的几张图按 Figma 位置绝对定位；静态布景不接收鼠标 */
+.sk img.ly{position:absolute;max-width:none}
+.static,.static *{pointer-events:none}
+/* 雕像背后的光束：整圈 16 道柔边白色射线，绕雕像背后的中心（盒子中心）每 40s 转一圈，从中心往外淡掉。
+   开场时遮罩从中心往外长（--rr，由 main.js 播）。上面一层彩色流光：锥形渐变慢慢转（--ra），先模糊、再按射线形状遮住，所以颜色是弥散的、只落在光上；它在射线里面，跟着一起转 */
+@property --rr{syntax:'<length-percentage>';inherits:false;initial-value:110%}
+@property --ra{syntax:'<angle>';inherits:false;initial-value:0deg}
+.rays .ly{display:none}
+.rays .sk{-webkit-mask:radial-gradient(circle at 50% 50%,#000 var(--rr),transparent calc(var(--rr) + 22%));mask:radial-gradient(circle at 50% 50%,#000 var(--rr),transparent calc(var(--rr) + 22%))}
+.rays .rw{--beam:repeating-conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,.95) 5deg,rgba(255,255,255,0) 11deg,rgba(255,255,255,0) 22.5deg);
+  position:absolute;inset:0;border-radius:50%;background:var(--beam);filter:blur(1.5px);
+  -webkit-mask:radial-gradient(circle,#000 6%,rgba(0,0,0,.75) 22%,rgba(0,0,0,.3) 38%,transparent 50%);mask:radial-gradient(circle,#000 6%,rgba(0,0,0,.75) 22%,rgba(0,0,0,.3) 38%,transparent 50%);
+  animation:rw-spin 40s linear infinite}
+@keyframes rw-spin{to{transform:rotate(360deg)}}
+.rays .rb{position:absolute;inset:0;-webkit-mask:var(--beam);mask:var(--beam)}
+.rays .rb::before{content:'';position:absolute;inset:-10%;opacity:.55;filter:blur(26px);
+  background:conic-gradient(from var(--ra) at 50% 50%,#ff9fd2,#ffd88a,#b8f5a0,#8fe3ff,#c7a8ff,#ff9fd2);animation:rb-spin 9s linear infinite}
+@keyframes rb-spin{to{--ra:360deg}}
+.reduce-motion .rays .rw,.reduce-motion .rays .rb::before{animation:none}
+#bg{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;
+  clip-path:inset(0 0 0 0);--d:.18}
+#bg img{width:100%;height:100%;display:block}
+
+/* labels */
+.lbl{position:relative;display:block;font-size:96px;color:#fff;font-weight:700;letter-spacing:0}
+/* Figma:96px 白字,黑色描边 7px,位置「外侧」,尖角连接,无阴影。
+   CSS 的文字描边是居中的,所以写 14px;paint-order 让填充盖住内侧那一半,外侧正好 7px */
+.lbl.out{-webkit-text-stroke:14px var(--ink);paint-order:stroke fill;stroke-linejoin:miter;stroke-miterlimit:4;text-shadow:none}
+.lbl::before,.lbl::after{content:attr(data-t);position:absolute;left:0;top:0;opacity:0;pointer-events:none;
+  -webkit-text-stroke:0;paint-order:normal;text-shadow:none}
+.lbl::before{color:var(--cy);mix-blend-mode:multiply}
+.lbl::after{color:var(--mg);mix-blend-mode:multiply}
+.hot .lbl.out{color:var(--yellow)}
+.hot .lbl::before{opacity:1;animation:glitchA .45s steps(2,end) infinite}
+.hot .lbl::after{opacity:1;animation:glitchB .45s steps(2,end) infinite}
+@keyframes glitchA{0%{translate:-6px 2px;clip-path:inset(0 0 60% 0)}50%{translate:5px -2px;clip-path:inset(40% 0 10% 0)}100%{translate:-3px 0;clip-path:inset(70% 0 0 0)}}
+@keyframes glitchB{0%{translate:6px -2px;clip-path:inset(55% 0 0 0)}50%{translate:-5px 3px;clip-path:inset(0 0 55% 0)}100%{translate:3px 0;clip-path:inset(20% 0 40% 0)}}
+
+.gray{color:#8b8b8b;font-weight:700;font-size:96px}
+.menuEn{font-size:128px;color:#fff;opacity:.43;font-weight:900;text-align:right}
+.small{font:700 32px/normal Inter,"Microsoft YaHei",sans-serif;color:#000;text-align:right}
+.btn{width:262px;height:85px;background:var(--yellow);border:7px solid #fff;border-radius:9px;
+  box-shadow:0 0 0 4px var(--ink),6px 8px 0 4px var(--ink)}
+/* Figma:64px 黑字,白色描边 3px,位置「外侧」 */
+.btnTxt{font-size:64px;color:#000;font-weight:700;-webkit-text-stroke:6px #fff;paint-order:stroke fill;stroke-linejoin:miter;stroke-miterlimit:4}
+.pen{width:92px;height:85px;overflow:hidden;position:relative}
+.pen img{position:absolute;left:0;top:0;height:100%;width:1362.6%;max-width:none}
+.avatar{width:140px;height:113px;overflow:hidden;position:relative}
+.avatar img{position:absolute;max-width:none;height:682.92%;left:-164.12%;top:-341.09%;width:695.8%}
+.star .in{position:absolute;inset:5.73% 7.77% 13.69% 7.77%}
+.star .in img{width:100%;height:100%}
+.barrow .in{position:absolute;inset:-4.17% -3.41%}
+.barrow .in img{width:100%;height:100%}
+
+/* hot / focus state */
+.g-hot .fx{transform:scale(1.07)}   /* 主页悬停：只放大，不描边、不抬起、不加投影 */
+.g-hot.nolift .fx{transform:scale(1.04)}
+/* 书里的雕像：悬停翻页时变大、弹出、悬在书页上方并轻轻浮动。外层 .it 的原点在雕像脚底，缩放和上浮都以脚底为准。
+   弹出用带一点过冲的曲线，收回时同样走这条曲线 */
+.lbl.out.s64{font-size:64px;-webkit-text-stroke:12px var(--ink)}
+.statue,.statue *,.sshad,.sshad *,.plinth,.plinth *{pointer-events:none}
+/* 墙上的「万象站 / 作品百科」标签：平时不出现；书翻开后淡入并微微上浮到位（晚 .25s，让翻页先走），合上后立刻消失。
+   隐藏时不接收鼠标，避免悬停到看不见的字上触发翻页 */
+.blab .fx{opacity:0;transform:translateY(16px);transition:transform .5s var(--glide),opacity .3s ease}
+.blab.on .fx{opacity:1;transform:none;transition-delay:.25s}
+.blab.on.g-hot .fx{transform:translateY(-16px) scale(1.07)}  /* 悬停到标签上时保留抬起效果 */
+.blab:not(.on),.blab:not(.on) *{pointer-events:none}
+/* 平时两尊雕像（和底座、投影）都不出现；悬停翻页时对应一侧的雕像从书里变大、弹出、悬在书页上方并轻轻浮动。
+   弹出用带一点过冲的曲线；.popped 由 main.js 在判断出左/右半时加上 */
+.statue .fx,.sshad .fx,.plinth .fx{transition:transform .65s cubic-bezier(.34,1.35,.5,1),opacity .35s ease}
+.statue .fx{opacity:0;transform:translateY(22px) scale(.55)}
+.statue.popped .fx{opacity:1;transform:translateY(-55px) scale(1.25);animation:bob 2.6s ease-in-out .7s infinite}
+.statue.shr .sk img{opacity:.7}
+.plinth .fx{opacity:0}
+.plinth.popped .fx{opacity:1}
+.plinthbox{width:100%;height:100%;background:#bbb;border:7px solid rgba(0,0,0,.31)}
+.sshad .fx{opacity:0;transform:scale(.55)}
+.sshad.popped .fx{opacity:1;transform:scale(1.1)}
+.sshadow{width:100%;height:100%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.34),rgba(0,0,0,0))}
+
+/* 纯黑文字不加硬阴影,否则会和文字本身重影 */
+.g-hot.noshadow .fx,.g-focus.noshadow .fx{filter:none}
+.g-press .fx{transform:translateY(4px) scale(.95);transition-duration:.08s}
+
+/* idle */
+@keyframes sway{0%,100%{rotate:-.8deg}50%{rotate:1.1deg}}
+@keyframes arrowNudge{0%,100%{translate:0 0}50%{translate:12px -9px}}
+@keyframes twinkle{0%,100%{scale:1;rotate:0deg}50%{scale:1.35;rotate:18deg}}
+@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -5px}}
+.idle-sway .fx{animation:sway 4.4s ease-in-out infinite;transform-origin:50% 0}
+.idle-arrow .fx{animation:arrowNudge 1s ease-in-out infinite}
+.idle-star .fx{animation:twinkle 1.6s ease-in-out infinite}
+.idle-bob .fx{animation:bob 2.4s ease-in-out infinite}
+
+/* focus ring for keyboard nav */
+.g-focus .fx{filter:drop-shadow(0 0 0 var(--yellow)) drop-shadow(calc(var(--sx,10px) * .6) 8px 0 rgba(0,0,0,.42))}
+
+#room{z-index:1}
+#ink{position:absolute;inset:0;pointer-events:none;z-index:6}
+
+/* cursor */
+#cursor{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:60}
+#cursor i{position:absolute;left:calc(-15px * var(--cur-k, 1));top:calc(-15px * var(--cur-k, 1));width:calc(30px * var(--cur-k, 1));height:calc(30px * var(--cur-k, 1));border:4px solid var(--ink);background:var(--yellow);   /* --cur-k：设置页「光标大小」 */
+  rotate:45deg;transition:scale .15s,rotate .3s;box-shadow:2.5px 3.5px 0 rgba(0,0,0,.45)}
+#cursor.hot i{scale:1.3;rotate:225deg;background:#fff}   /* 悬停到可点元素：放大到 1.3 倍（30→39px） */
+#cursor.down i{scale:.7}
+
+/* flash / wipe */
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:70}
+#wipe{position:absolute;left:50%;top:50%;width:3800px;height:3800px;margin:-1900px 0 0 -1900px;pointer-events:none;z-index:50;
+  transform:rotate(var(--iso))}
+#wipe .title{position:absolute;left:0;right:0;top:50%;margin-top:-170px;text-align:center;font-weight:900;opacity:0;pointer-events:none}
+#wipe .title b{display:block;font-size:300px;line-height:1;color:#fff;font-weight:700;-webkit-text-stroke:16px var(--ink);paint-order:stroke fill;text-shadow:12px 14px 0 var(--ink)}
+#wipe .title em{display:block;font:italic 900 110px/1 Inter,sans-serif;color:var(--yellow);letter-spacing:.2em;margin-top:6px;-webkit-text-stroke:8px var(--ink);paint-order:stroke fill}
+
+/* ink spread / erase / slashes */
+#inkspread{position:absolute;inset:-300px;z-index:45;pointer-events:none;filter:url(#inkf)}
+#inkspread i{position:absolute;inset:0;clip-path:circle(0px at 0 0)}
+#inkspread .y{background:var(--yellow)}
+#inkspread .b{background:var(--ink)}
+
+/* pages */
+#pages{position:absolute;inset:0;z-index:20;pointer-events:none}
+.page{position:absolute;inset:0;display:none;background:var(--paper);overflow:hidden;pointer-events:auto}
+.page.on{display:block}
+.page .halftone{position:absolute;inset:0;opacity:.18;
+  background:radial-gradient(circle,#000 1.6px,transparent 2px) 0 0/16px 16px;-webkit-mask:linear-gradient(115deg,#000,transparent 55%);mask:linear-gradient(115deg,#000,transparent 55%)}
+.page .ghost{position:absolute;right:30px;top:20px;font:900 260px/1 Inter,sans-serif;color:#fff;opacity:.55;letter-spacing:.02em}
+.page h1{position:absolute;left:150px;top:44px;font-size:120px;color:#fff;font-weight:700;-webkit-text-stroke:8px var(--ink);paint-order:stroke fill;text-shadow:5px 6px 0 var(--ink);
+  transform:rotate(-3deg) skewX(-6deg)}
+.page .back{position:absolute;left:34px;top:22px;font-size:64px;color:#8b8b8b;font-weight:900;cursor:none;transition:color .15s,translate .2s}
+.page .back:hover{color:var(--ink);translate:-8px 0}
+.page .body{position:absolute;left:150px;right:120px;top:250px;bottom:80px}
+.card{position:relative;background:#fff;border:6px solid var(--ink);box-shadow:10px 12px 0 var(--ink);transition:transform .3s cubic-bezier(.3,1.8,.5,1),box-shadow .2s,background .2s}
+.card:hover{transform:translate(-6px,-10px) rotate(-1.2deg);box-shadow:18px 22px 0 var(--ink);background:#fff7d6}
+.pop{opacity:0;transform:translateY(60px) rotate(4deg) scale(.9)}
+.pop.in{opacity:1;transform:none;transition:opacity .25s,transform .5s cubic-bezier(.2,1.7,.4,1)}
+
+/* task page */
+.tasks{display:grid;grid-template-columns:1fr 1fr 1fr;gap:34px}
+.task{padding:26px 28px;height:360px;transform:skewX(-6deg)}
+.task:nth-child(2){margin-top:30px}.task:nth-child(3){margin-top:60px}
+.task .tag{display:inline-block;background:var(--ink);color:#fff;font:900 26px/1 Inter,sans-serif;padding:6px 14px;transform:skewX(-10deg)}
+.task h3{font-size:44px;margin:18px 0 10px;line-height:1.1}
+.task p{font:600 22px/1.5 "Microsoft YaHei",sans-serif;color:#444}
+.bar{position:absolute;left:28px;right:28px;bottom:28px;height:26px;border:5px solid var(--ink);background:#eee;overflow:hidden}
+.bar i{position:absolute;inset:0;width:0;background:repeating-linear-gradient(-45deg,var(--yellow) 0 12px,#ffdf6a 12px 24px);transition:width 1s cubic-bezier(.2,.9,.2,1) .4s}
+.task.act{background:var(--yellow)}
+
+/* codex */
+.codex{display:grid;grid-template-columns:repeat(6,1fr);gap:26px}
+.cx{height:220px;display:grid;place-items:center;font-size:90px;font-weight:900;perspective:600px;cursor:none}
+.cx span{font:900 22px/1 Inter,sans-serif;position:absolute;left:10px;top:8px;color:#888}
+.cx.lock{background:repeating-linear-gradient(-45deg,#d6d6d6 0 10px,#e8e8e8 10px 20px);color:#aaa}
+.cx.open:hover{background:var(--yellow)}
+
+/* contacts */
+.list{display:flex;flex-direction:column;gap:22px}
+.row{display:flex;align-items:center;gap:26px;height:128px;padding:0 30px;transform:skewX(-6deg)}
+.row .av{width:92px;height:92px;border:5px solid var(--ink);border-radius:50%;overflow:hidden;position:relative;background:#fff;flex:none}
+.row .av img{position:absolute;max-width:none;height:682.92%;left:-164.12%;top:-341.09%;width:695.8%;filter:hue-rotate(var(--hu,0deg))}
+.row b{font-size:44px;flex:1}.row small{font:700 22px Inter,sans-serif;color:#777}
+.row .st{width:64px;height:64px;cursor:none;transition:transform .3s cubic-bezier(.3,2,.5,1),filter .2s;filter:grayscale(1) opacity(.5)}
+.row .st.on{filter:none;transform:scale(1.25) rotate(20deg)}
+.row .st img{width:100%;height:100%}
+
+/* 翻页书 */
+.sk canvas{display:block;pointer-events:none}
+.it.lblhide{visibility:hidden;pointer-events:none}
+.lbl.bk{font-size:52px;-webkit-text-stroke:8px var(--ink)} /* 书页标签不是 Figma 里的元素,描边按 96px→52px 等比缩小 */
+.sqs{display:flex;gap:70px;align-items:flex-start}
+.sq{width:260px;height:260px;background:#fff}
+.sq:nth-child(2){margin-top:90px;background:#cfd8dc}
+.sq:nth-child(3){margin-top:-20px;background:#78909c}
+.pill{position:absolute;left:0;bottom:30px;width:150px;height:26px;border-radius:13px;background:#4aa3e8;filter:blur(3px)}
+
+/* settings */
+.set{display:flex;flex-direction:column;gap:30px;max-width:1200px}
+.srow{display:flex;align-items:center;gap:40px;padding:22px 34px;transform:skewX(-6deg)}
+.srow b{width:260px;font-size:48px}
+.slider{position:relative;flex:1;height:34px;border:6px solid var(--ink);background:#eee;cursor:none}
+.slider i{position:absolute;left:0;top:0;bottom:0;width:50%;background:repeating-linear-gradient(-45deg,var(--yellow) 0 12px,#ffdf6a 12px 24px)}
+.slider u{position:absolute;top:-16px;width:26px;height:58px;background:var(--ink);transform:translateX(-50%) skewX(-10deg);border:4px solid #fff;box-shadow:0 0 0 3px var(--ink)}
+.srow output{font:900 40px Inter,sans-serif;width:90px;text-align:right}
+.tog{width:150px;height:60px;border:6px solid var(--ink);background:#ddd;position:relative;cursor:none;transition:background .2s}
+.tog u{position:absolute;left:4px;top:4px;width:40px;height:40px;background:var(--ink);transition:left .25s cubic-bezier(.3,1.8,.5,1)}
+.tog.on{background:var(--yellow)}.tog.on u{left:92px}
+
+/* 设置齿轮：PNG 只当点击遮罩；矢量齿轮平时静止，悬停时转（8 秒一圈），离开时停在当前角度 */
+.gear-it .ly{visibility:hidden}
+.gear-it .gear{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.gear-it .spin{transform-origin:160px 160px;animation:gearTurn 8s linear infinite;animation-play-state:paused}
+.gear-it.g-hot .spin{animation-play-state:running}
+@keyframes gearTurn{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.gear-it .spin{animation:none}}
+/* 头像贴纸（Figma「有改动」）：1 / 2 两张手绘图来回切换，切换瞬间带一下闪烁；第一层整图只给点击判断用 */
+.flick .ly:nth-child(1){visibility:hidden}
+.flick .ly:nth-child(3){animation:flick2 1.2s steps(1,end) infinite}
+.flick .ly:nth-child(4){animation:flick1 1.2s steps(1,end) infinite}
+@keyframes flick1{0%{opacity:1}45%{opacity:.35}50%{opacity:0}95%{opacity:.35}}
+@keyframes flick2{0%{opacity:0}45%{opacity:.35}50%{opacity:1}95%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.flick .ly:nth-child(3){animation:none;opacity:0}.flick .ly:nth-child(4){animation:none}}
